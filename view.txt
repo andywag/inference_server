@@ -1,0 +1,4 @@
+swdb_api git@phabricator.sourcevertex.net:diffusion/SWDBAPI/swdb_api.git GIT master HEAD
+arcanist_linters/clang-format-linter git@phabricator.sourcevertex.net:diffusion/CLANGFORMATLINTER/clang-format-linter.git GIT master HEAD
+icu_firmwares_package.tar.gz tar.gz icu_firmwares_package icu_firmwares_package:1.1.17
+#ipu_test_binaries.tar.gz tar.gz ipu_test_binaries ipu_test_binaries
