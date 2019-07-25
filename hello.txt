@@ -2,7 +2,9 @@ one
 two
 three
 four
-seven
 five
 six
-EIGHTEEN
+seven
+eight
+nine
+eighteen
