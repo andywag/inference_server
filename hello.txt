@@ -7,7 +7,7 @@ six
 seven
 eight
 nine
-ten
+ten 10
 eleven
 twelve
 thirteen
