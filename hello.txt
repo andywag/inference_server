@@ -1,3 +1,4 @@
+minus one
 zero
 one
 two
@@ -29,3 +30,4 @@ twenty seven
 twenty eight
 twenty nine
 thirty
+
