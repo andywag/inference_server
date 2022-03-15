@@ -1,0 +1,20 @@
+import {Grid} from '@mui/material'
+import { LineChart, XAxis, YAxis, CartesianGrid, Line} from 'recharts';
+
+function ResultChart(props) {
+  
+    return (
+        <Grid item xs={6}>
+            <LineChart width={500} height={300} data={props.data}>
+                <XAxis/>
+                <YAxis/>
+                <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
+                <Line type="monotone" dataKey="error" stroke="#8884d8" />
+                
+            </LineChart>
+        </Grid>
+    );
+
+}
+
+export default ResultChart;

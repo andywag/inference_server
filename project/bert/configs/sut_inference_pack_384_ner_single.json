@@ -1,0 +1,27 @@
+{
+    "task": "NER",
+    "encoder_start_ipu": 0,
+    "layers_per_ipu": [24],
+    "num_layers": 24,
+    "vocab_length":30522,
+    "hidden_size": 1024,
+    "attention_heads": 16,
+    "sequence_length": 384,
+    "popart_dtype": "FLOAT16",
+    "no_dropout": true,
+    "stochastic_rounding": false,
+    "batches_per_step": 256,
+    "micro_batch_size": 4,
+    "global_batch_size": 4,
+    "split_qkv": true,
+    "enable_half_partials": true,
+    "torch_checkpoint_link": "https://huggingface.co/dslim/bert-large-NER/resolve/main/pytorch_model.bin",
+    "torch_checkpoint_name": "ner_large_model.bin",
+
+    "engine_cache": "__ner_torch_single",
+    "inference": true,
+    "max_copy_merge_size": -1,
+    "available_memory_proportion": [0.15],
+    "use_packed_sequence_format": true,
+    "attention_bias":true
+}

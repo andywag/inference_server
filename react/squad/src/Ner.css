@@ -1,0 +1,42 @@
+.loc{
+    background:#491b4f;
+    width:auto;
+    border-radius: 6px;
+    padding-right: 7px;
+    padding-left: 7px;
+    color: white;
+    font-size: 10px;
+}
+
+.per{
+    background:#4b8536;
+    width:auto;
+    border-radius: 6px;
+    padding-right: 7px;
+    padding-left: 7px;
+    font-size: 10px;
+
+    color: white;
+}
+
+.org{
+    background:#c1cc0c;
+    width:auto;
+    border-radius: 6px;
+    padding-right: 7px;
+    padding-left: 7px;
+    font-size: 10px;
+
+    color: white;
+}
+
+.misc{
+    background:#4c4f1b;
+    width:auto;
+    border-radius: 6px;
+    padding-right: 7px;
+    padding-left: 7px;
+    font-size: 10px;
+
+    color: white;
+}
