@@ -135,6 +135,7 @@ def generate_initializers(config, weights, mapping, transform={}, inference=True
 
 
     for name, a in weights.items():
+        array = a.numpy()
         #if "attention" in name and "bias" in name:
         #    continue
         if "pooler" in name or 'position_ids' in name:

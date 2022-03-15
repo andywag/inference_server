@@ -13,4 +13,4 @@ PYTHONPATH="${PYTHONPATH}:${PROJECT_PATH}/../public_api"
 
 export TRITON_PROJECT_PROTO_PATH="./prototypes"
 
-./triton/server/install/bin/tritonserver --model-repository ./project/gen_models --backend-directory ./triton/python_backend
+${INFERENCE_BUILD}/triton/server/install/bin/tritonserver --model-repository ./project/gen_models --backend-directory ${INFERENCE_BUILD}/triton/python_backend
