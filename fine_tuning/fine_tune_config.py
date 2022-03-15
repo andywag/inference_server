@@ -86,11 +86,12 @@ class Result:
 class StatusLog:
     status:str
     time:int
+    detail:Optional[str]=None
 
 @dataclass
 class ModelResult:
     uuid:str
-    hostname:Optional[str]
+    hostname:str
     description:ModelDescription
     results:List[Result]
     status:List[StatusLog]
