@@ -30,6 +30,7 @@ class BertSpecific(ModelSpecific):
     sequence_length:int=384
     embedding_serialization_factor:int=1
     tuning_type:str = "Sequence"
+    num_labels:int = 3
     #tuning_type:BertTaskEnum=BertTaskEnum.SEQUENCE
 
     def get_model(self, model_description, config, half=True):
@@ -37,11 +38,13 @@ class BertSpecific(ModelSpecific):
         config.embedding_serialization_factor=self.embedding_serialization_factor
         config.layers_per_ipu=model_description.ipu_layout.layers_per_ipu
         config.recompute_checkpoint_every_layer=model_description.ipu_options.recompute_checkpoint_every_layer
+        config.num_labels = num_labels
 
-        if self.tuning_type == BertTaskEnum.SEQUENCE:
+        if self.tuning_type == "Sequence":
             model = PipelinedBertForSequenceClassification.from_pretrained(model_description.checkpoint, config=config).half()
-            #if half:
-            #    model = model.half()
+            return model
+        elif self.tuning_type == "Token":
+            model = PipelinedBertForTokenClassification.from_pretrained(model_description.checkpoint, config=config).half()
             return model
         else:
             print("Error")

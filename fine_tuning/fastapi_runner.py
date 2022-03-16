@@ -30,6 +30,8 @@ class ModelConfig:
     optimizer:str
     learning_rate:float
     epochs:int
+    classifier:str
+    num_labels:int
 
     def create_model_description(self):
         model_description = ModelDescription()
@@ -58,14 +60,24 @@ def get_results() -> ModelResults:
 @app.post("/tune")
 def run_bart(model_input:ModelConfig) -> ModelResponse:
     print(model_input)
+    # Create the Model
     model_description = model_input.create_model_description()
     model_description_dict = dataclasses.asdict(model_description)
+    bert_specific = BertSpecific("bert")
+    bert_specific.tuning_type = model_input.classifier
+    bert_specific.num_labels = model_input.num_labels
     bert_specific_dict = dataclasses.asdict(BertSpecific("bert"))
+    # Create the Model Result
+    result = ModelResult("", "", model_description, list(), list())
+    result_dict = dataclasses.asdict(result)
+    mongo = MongoInterface()
+    result_id = mongo.create_result(result_dict)
+    # Update the Mongo Status
+    mongo.update_status(result_id,"Submitting")
+    result = run_dict.delay(model_description_dict, bert_specific_dict, str(result_id))
 
-    result = run_dict.delay(model_description_dict, bert_specific_dict)
-    
 
-    return ModelResponse("Here I am ...")
+    return ModelResponse("Started")
 
 
 

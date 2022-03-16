@@ -15,7 +15,7 @@ logger = get_task_logger(__name__)
 
 
 @app.task(bind=True)
-def run_dict(self, model_description_dict:dict, specific_description_dict:dict):
+def run_dict(self, model_description_dict:dict, specific_description_dict:dict, result_id:str):
     logger.info(f"Running Model {model_description_dict}")
     self.update_state(state=states.STARTED)
     #print("Model", model_description_dict, type(model_description_dict))
