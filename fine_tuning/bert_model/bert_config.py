@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from enum import Enum, unique
 from fine_tune_config import ModelSpecific
-from .modeling import PipelinedBertForSequenceClassification
+from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 import ctypes
 import os
 
@@ -38,8 +38,9 @@ class BertSpecific(ModelSpecific):
         config.embedding_serialization_factor=self.embedding_serialization_factor
         config.layers_per_ipu=model_description.ipu_layout.layers_per_ipu
         config.recompute_checkpoint_every_layer=model_description.ipu_options.recompute_checkpoint_every_layer
-        config.num_labels = num_labels
-        print("Creating", num_labels)
+        config.num_labels = self.num_labels
+        print("Number Labels Inside Here", config.num_labels)
+
 
         if self.tuning_type == "Sequence":
             model = PipelinedBertForSequenceClassification.from_pretrained(model_description.checkpoint, config=config).half()

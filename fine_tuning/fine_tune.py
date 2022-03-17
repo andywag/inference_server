@@ -36,6 +36,7 @@ def main(model_description:ModelDescription, celery, logger):
 
     mongo.update_status(result_id,"Starting")
 
+    print("A", model_description)
     # Create Result In Mongo Database
     
     mongo.update_status(result_id,"Loading Data")
@@ -46,6 +47,7 @@ def main(model_description:ModelDescription, celery, logger):
         data_loader = create_data_loader(model_description, tokenizer, options)
     except Exception as e:
         mongo.update_status(result_id,"Data Error",str(e))
+        logger.info("Data Loading Error", str(e))
 
     try :
         mongo.update_status(result_id,"Compiling")
@@ -55,6 +57,7 @@ def main(model_description:ModelDescription, celery, logger):
         model_ipu = poptorch.trainingModel(model, options, optimizer)
     except Exception as e:
         mongo.update_status(result_id,"Compile Error",str(e))
+        logger.info("Model Compilation Error", str(e))
 
     mongo.update_status(result_id,"Running")
 
