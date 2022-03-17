@@ -9,7 +9,7 @@ from fine_tune_config import ModelDescription, ModelResult
 from bert_model.bert_config import BertSpecific
 import pymongo
 from mongo_interface import MongoInterface
-from bert_config_new import BertDescription
+from bert_model.bert_config_new import BertDescription
 
 app = FastAPI()
 app.add_middleware(
@@ -59,11 +59,10 @@ def get_results() -> ModelResults:
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
 
-    mongo = MongoInterface()
+    
 
     if model_input.model_type == 'BERT':
-        mongo.update_status(result_id,"Submit")
-        model_description = BertDescription()
+        bert_description = BertDescription()
         model_description = model_input.create_model_description(bert_description)
         model_description.model_specific.tuning_type = model_input.classifier
         model_description.model_specific.num_labels = model_input.num_labels
@@ -72,10 +71,12 @@ def run_tune(model_input:ModelConfig) -> ModelResponse:
     else:
         mongo.update_status(result_id,"ModelNotSupported")
         print("Model Not Supported")
-    
+
+    mongo = MongoInterface()
     result = ModelResult("", "", model_description, list(), list())
     result_dict = dataclasses.asdict(result)
     result_id = mongo.create_result(result_dict)
+    mongo.update_status(result_id,"Submit")
     
     print(model_input)
     result = run_dict.delay(model_description, str(result_id))

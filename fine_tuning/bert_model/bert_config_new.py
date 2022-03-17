@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 from enum import Enum, unique
-from fine_tune_config import ModelSpecific
+from fine_tune_config import ModelDescription
 from .modeling import PipelinedBertForSequenceClassification
 import ctypes
 import os
@@ -21,7 +21,7 @@ def handle_custom_ops(config):
 
 
 @dataclass
-class BertSpecific(ModelSpecific):
+class BertSpecific:
     model_path:str="./bert_model"
     sequence_length:int=384
     embedding_serialization_factor:int=1
@@ -32,7 +32,7 @@ class BertSpecific(ModelSpecific):
 
 @dataclass 
 class BertDescription(ModelDescription):
-    model_specific:BertSpecific
+    model_specific:BertSpecific=BertSpecific()
 
     def get_model(self, config, half=True):
         # Load Custom Ops

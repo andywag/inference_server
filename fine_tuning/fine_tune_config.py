@@ -55,12 +55,6 @@ class ModelDataset:
     text:str="text"
     token_format:List[str]=field(default_factory=lambda:['input_ids', 'token_type_ids', 'attention_mask', 'label'])
 
-@dataclass
-class ModelSpecific:
-    name:str
-
-    def get_model(self, checkpoint):
-        raise NotImplementedError("Need to Generate Model")
 
 @dataclass
 class ModelDescription:
@@ -72,7 +66,7 @@ class ModelDescription:
     execution_description:ExecutionDescription=ExecutionDescription()
     ipu_layout:IpuLayout=IpuLayout()
     dataset:ModelDataset=ModelDataset()
-    model_specific:ModelSpecific=ModelSpecific('test')
+    #model_specific:ModelSpecific=ModelSpecific('test')
 
 
 @dataclass

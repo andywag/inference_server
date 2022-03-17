@@ -1,7 +1,6 @@
 
 from dataclasses import dataclass
 from enum import Enum, unique
-from fine_tune_config import ModelSpecific
 from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 import ctypes
 import os
@@ -25,7 +24,7 @@ class BertTaskEnum(str,Enum):
     TOKEN = "Token"
 
 @dataclass
-class BertSpecific(ModelSpecific):
+class BertSpecific:
     model_path:str="./bert_model"
     sequence_length:int=384
     embedding_serialization_factor:int=1
