@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from enum import Enum, unique
 from fine_tune_config import ModelDescription
-from .modeling import PipelinedBertForSequenceClassification
+from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 import ctypes
 import os
 
@@ -40,16 +40,17 @@ class BertDescription:
         # TODO : Add Error Condition
         handle_custom_ops(config)
         config.embedding_serialization_factor=self.model_specific.embedding_serialization_factor
-        config.layers_per_ipu=self.ipu_layout.layers_per_ipu
-        config.recompute_checkpoint_every_layer=self.ipu_options.recompute_checkpoint_every_layer
+        config.layers_per_ipu=self.model_description.ipu_layout.layers_per_ipu
+        config.recompute_checkpoint_every_layer=self.model_description.ipu_options.recompute_checkpoint_every_layer
         config.num_labels = self.model_specific.num_labels
-        print("Creating", num_labels)
+        print("Creating", self.model_specific.num_labels, self.model_description.execution_description.epochs)
 
         if self.model_specific.tuning_type == "Sequence":
-            model = PipelinedBertForSequenceClassification.from_pretrained(self.checkpoint, config=config).half()
+            model = PipelinedBertForSequenceClassification.from_pretrained(self.model_description.checkpoint, config=config).half()
             return model
         elif self.model_specific.tuning_type == "Token":
-            model = PipelinedBertForTokenClassification.from_pretrained(self.checkpoint, config=config).half()
+            print("Creating Token Model")
+            model = PipelinedBertForTokenClassification.from_pretrained(self.model_description.checkpoint, config=config).half()
             return model
         else:
             print("Error")

@@ -13,12 +13,12 @@ from mongo_interface import MongoInterface
 import time
 import socket
 
-def create_data_loader(model_description:ModelDescription, tokenizer, options):
+def create_data_loader(model_description:ModelDescription, model_specific, tokenizer, options):
     dataset = load_dataset(model_description.dataset.name)
     if model_description.dataset.train is not None:
         dataset = dataset[model_description.dataset.train]
     tokenized_dataset = dataset.map(lambda x: tokenizer(x[model_description.dataset.text],
-        max_length=model_description.model_specific.sequence_length, truncation=True, padding=True),batched=True)
+        max_length=model_specific.sequence_length, truncation=True, padding=True),batched=True)
     tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
     data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=model_description.execution_description.batch_size, shuffle=True)
 
@@ -26,32 +26,39 @@ def create_data_loader(model_description:ModelDescription, tokenizer, options):
 
 
 
-def main(model_description:ModelDescription, result_id:str, celery, logger):
+def main(top_description, result_id:str, celery, logger):
 
+    #model_description = model_description.model_description
+    model_specific = top_description.model_specific
+    model_description = top_description.model_description
 
     mongo = MongoInterface()
 
+    result_id = ObjectId(result_id)
     # Create Result In Mongo Database
-    
-    mongo.update_status(result_id,"LoadingData")
+    logger.info(f"Update Status {result_id}")
+    mongo.update_status(result_id,"Loading Data")
+    mongo.update_host(result_id, socket.gethostname())
     try :
         options = get_options(model_description)
         config = AutoConfig.from_pretrained(model_description.checkpoint)
         tokenizer = AutoTokenizer.from_pretrained(model_description.tokenizer, use_fast=True)
-        data_loader = create_data_loader(model_description, tokenizer, options)
+        data_loader = create_data_loader(model_description, model_specific, tokenizer, options)
     except Exception as e:
         mongo.update_status(result_id,"Data Error",str(e))
-        logger.info("Data Loading Error", str(e))
+        logger.info(f"Data Loading Error {str(e)}")
+        return
 
     try :
         mongo.update_status(result_id,"Compiling")
-        model = model_description.get_model(config,half=True)
+        model = top_description.get_model(config,half=True)
         optimizer = get_optimizer(model_description, model)
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)
     except Exception as e:
         mongo.update_status(result_id,"Compile Error",str(e))
-        logger.info("Model Compilation Error", str(e))
+        logger.info(f"Model Compilation Error {str(e)}")
+        return 
 
     mongo.update_status(result_id,"Running")
 

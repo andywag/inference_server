@@ -21,8 +21,8 @@ def run_dict(self, model_description_dict:dict, result_id:str):
 
     # TODO : Make Generic Support for Model
     model_description = dacite.from_dict(data_class=BertDescription, data=model_description_dict)
-    print("Model", model_description)
+    logger.info(f"Model{model_description}")
 
     #return "HHH"
-    result =  main(model_description, self, logger, result_id)
+    result =  main(model_description, result_id, self, logger)
     return result
