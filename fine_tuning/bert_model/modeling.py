@@ -297,7 +297,7 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
         else:
             super().save_pretrained(*args, **kwargs)
 
-class PipelinedBertForSequenceClassification(transformers.BertForTokenClassification):
+class PipelinedBertForTokenClassification(transformers.BertForTokenClassification):
     def __init__(self, config):
         super().__init__(config)
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
