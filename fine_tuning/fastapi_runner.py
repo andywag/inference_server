@@ -34,7 +34,7 @@ class ModelConfig:
     classifier:str
     num_labels:int
 
-    def create_model_description(self, model_description):
+    def create_model_description(self, model_description=ModelDescription()):
         model_description.name = self.name
         model_description.tokenizer = self.tokenizer
         model_description.checkpoint = self.checkpoint
@@ -51,22 +51,22 @@ class ModelResults:
     results:List[ModelResult]
 
 @app.get("/results")
-def get_results() -> ModelResults:
+def get_results():
     mongo = MongoInterface()
     results = mongo.get_all_results()
-    return ModelResults(results)
+    return results
 
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
 
-    
+    model_description = model_input.create_model_description()
 
     if model_input.model_type == 'BERT':
         bert_description = BertDescription()
-        model_description = model_input.create_model_description(bert_description)
-        model_description.model_specific.tuning_type = model_input.classifier
-        model_description.model_specific.num_labels = model_input.num_labels
-
+        bert_description.model_description = model_description
+        bert_description.model_specific.tuning_type = model_input.classifier
+        bert_description.model_specific.num_labels = model_input.num_labels
+        model_description = bert_description
         #model_description = model_input.create_model_description()
     else:
         mongo.update_status(result_id,"ModelNotSupported")
@@ -79,7 +79,10 @@ def run_tune(model_input:ModelConfig) -> ModelResponse:
     mongo.update_status(result_id,"Submit")
     
     print(model_input)
-    result = run_dict.delay(model_description, str(result_id))
+    model_description_dict = dataclasses.asdict(model_description)
+    uuid = run_dict.delay(model_description_dict, str(result_id))
+    # Attach the ID to the Database
+    mongo.update_id(result_id, str(uuid))
 
     return ModelResponse(str(result_id))
     # Create the Model

@@ -31,7 +31,8 @@ class BertSpecific:
     
 
 @dataclass 
-class BertDescription(ModelDescription):
+class BertDescription:
+    model_description:ModelDescription=ModelDescription()
     model_specific:BertSpecific=BertSpecific()
 
     def get_model(self, config, half=True):
