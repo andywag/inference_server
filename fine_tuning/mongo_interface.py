@@ -27,6 +27,9 @@ class MongoInterface:
             {"$push":  {"results":  value } } 
         )
 
+    def get_result(self, result_id):
+        return self.collection.find_one({'_id':result_id})
+
     def get_all_results(self):
         cursor = self.collection.find({})
         documents = []

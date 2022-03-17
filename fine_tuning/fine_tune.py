@@ -26,20 +26,14 @@ def create_data_loader(model_description:ModelDescription, tokenizer, options):
 
 
 
-def main(model_description:ModelDescription, celery, logger):
+def main(model_description:ModelDescription, result_id:str, celery, logger):
 
-    result = ModelResult(celery.request.id, socket.gethostname(), model_description, list(), list())
-    result_dict = dataclasses.asdict(result)
 
     mongo = MongoInterface()
-    result_id = mongo.create_result(result_dict)
 
-    mongo.update_status(result_id,"Starting")
-
-    print("A", model_description)
     # Create Result In Mongo Database
     
-    mongo.update_status(result_id,"Loading Data")
+    mongo.update_status(result_id,"LoadingData")
     try :
         options = get_options(model_description)
         config = AutoConfig.from_pretrained(model_description.checkpoint)
@@ -51,7 +45,7 @@ def main(model_description:ModelDescription, celery, logger):
 
     try :
         mongo.update_status(result_id,"Compiling")
-        model = model_description.model_specific.get_model(model_description, config,half=True)
+        model = model_description.get_model(config,half=True)
         optimizer = get_optimizer(model_description, model)
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)

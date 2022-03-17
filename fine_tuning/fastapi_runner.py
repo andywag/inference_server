@@ -9,6 +9,7 @@ from fine_tune_config import ModelDescription, ModelResult
 from bert_model.bert_config import BertSpecific
 import pymongo
 from mongo_interface import MongoInterface
+from bert_config_new import BertDescription
 
 app = FastAPI()
 app.add_middleware(
@@ -33,8 +34,7 @@ class ModelConfig:
     classifier:str
     num_labels:int
 
-    def create_model_description(self):
-        model_description = ModelDescription()
+    def create_model_description(self, model_description):
         model_description.name = self.name
         model_description.tokenizer = self.tokenizer
         model_description.checkpoint = self.checkpoint
@@ -58,26 +58,49 @@ def get_results() -> ModelResults:
 
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
-    print(model_input)
-    # Create the Model
-    model_description = model_input.create_model_description()
-    model_description_dict = dataclasses.asdict(model_description)
-    bert_specific = BertSpecific("bert")
-    bert_specific.tuning_type = model_input.classifier
-    bert_specific.num_labels = model_input.num_labels
-    bert_specific_dict = dataclasses.asdict(bert_specific)
-    print("Here", bert_specific.num_labels)
-    # Create the Model Result
+
+    mongo = MongoInterface()
+
+    if model_input.model_type == 'BERT':
+        mongo.update_status(result_id,"Submit")
+        model_description = BertDescription()
+        model_description = model_input.create_model_description(bert_description)
+        model_description.model_specific.tuning_type = model_input.classifier
+        model_description.model_specific.num_labels = model_input.num_labels
+
+        #model_description = model_input.create_model_description()
+    else:
+        mongo.update_status(result_id,"ModelNotSupported")
+        print("Model Not Supported")
+    
     result = ModelResult("", "", model_description, list(), list())
     result_dict = dataclasses.asdict(result)
-    mongo = MongoInterface()
     result_id = mongo.create_result(result_dict)
+    
+    print(model_input)
+    result = run_dict.delay(model_description, str(result_id))
+
+    return ModelResponse(str(result_id))
+    # Create the Model
+    
+
+    #model_description_dict = dataclasses.asdict(model_description)
+    #bert_specific = BertSpecific("bert")
+    #bert_specific.tuning_type = model_input.classifier
+    #bert_specific.num_labels = model_input.num_labels
+    #bert_specific_dict = dataclasses.asdict(bert_specific)
+    #print("Here", bert_specific.num_labels)
+    # Create the Model Result
+    #result = ModelResult("", "", model_description, list(), list())
+    #result_dict = dataclasses.asdict(result)
+    #mongo = MongoInterface()
+    #result_id = mongo.create_result(result_dict)
     # Update the Mongo Status
-    mongo.update_status(result_id,"Submitting")
-    result = run_dict.delay(model_description_dict, bert_specific_dict, str(result_id))
+    #mongo.update_status(result_id,"Submitting")
+    #result = run_dict.delay(model_description_dict, bert_specific_dict, str(result_id))
 
 
-    return ModelResponse("Started")
+    #return ModelResponse("Started")
 
 
 
