@@ -19,6 +19,11 @@ function FineForm(props) {
   const [learningRate, setLearningRate] = useState(.0001);
   const [epochs, setEpochs] = useState(1);
 
+  const [classifier, setClassifier] = useState("Sequence");
+  const [numLabels, setNumLabels] = useState(3);
+
+
+
   const create_query = () => {
     return {
       name:runId,
@@ -28,7 +33,10 @@ function FineForm(props) {
       tokenizer:tokenizer,
       optimizer:optimizer,
       learning_rate:learningRate,
-      epochs:epochs
+      epochs:epochs,
+      classifier:classifier,
+      num_labels:numLabels
+
     }
     
   }
@@ -68,6 +76,10 @@ function FineForm(props) {
         <SimpleText label="tokenizer" value={tokenizer} set={setTokenizer} grid={3}/>
         <SimpleText label="checkpoint" value={checkpoint} set={setCheckpoint} grid={3}/>
         <SimpleText label="dataset" value={dataset} set={setDataset} grid={3}/>
+    </Grid>
+    <Grid container padding={1}>
+        <SimpleSelect label="classifier" value={classifier} set={setClassifier} options={["Token","Sequence","MLM"]} grid={3}/>
+        <SimpleText label="numLabels" value={numLabels} set={setNumLabels} grid={3}/>
     </Grid>
     <Grid container padding={1}>
         <SimpleSelect label="optimizer" value={optimizer} set={setOptimizer} options={["ADAM","LAMB"]} grid={3}/>

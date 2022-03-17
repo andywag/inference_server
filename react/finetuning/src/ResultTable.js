@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {Table,TableBody,TableCell,TableContainer,TableHead,TableRow} from '@mui/material';
 import {Paper,Checkbox}  from '@mui/material';
 import moment from 'moment';
+
+import ReactJson from 'react-json-view'
+
 function ResultTable(props) {
   
 
@@ -62,9 +65,15 @@ function ResultTable(props) {
       return ""
     }
 
+    const handleContextMenu = () => {
+      console.log("Here")
+    }
+
+
+
     return (
         <TableContainer component={Paper}>
-            <Table size="small" sx={{ maxWidth: 650 }} aria-label="simple table">
+            <Table size="small" aria-label="simple table onContextMenu={handleContextMenu}">
                 <TableHead>
                     <TableRow>
                         <TableCell></TableCell>
@@ -72,6 +81,7 @@ function ResultTable(props) {
                         <TableCell>Status</TableCell>
                         <TableCell>Time</TableCell>
                         <TableCell>Host</TableCell>
+                        <TableCell>Config</TableCell>
                     </TableRow>
                 </TableHead>
             <TableBody>
@@ -91,6 +101,7 @@ function ResultTable(props) {
               <TableCell align="left">{row.status[row.status.length-1].status}</TableCell>
               <TableCell align="left">{getDate(row)}</TableCell>
               <TableCell align="left">{getHost(row)}</TableCell>
+              <TableCell align="left"><ReactJson collapsed="True" src={row.description}/></TableCell>
 
             </TableRow>
           ))}
