@@ -12,6 +12,12 @@ class MongoInterface:
         self.db = self.client.run_database
         self.collection = self.db.fine_tuning
 
+    def update_id(self, result_id, uuid):
+        self.collection.update_one({"_id": result_id},
+            {"$set":  {"uuid":  uuid} } 
+        )
+
+
     def create_result(self, result_dict):
         result_id = self.collection.insert_one(result_dict).inserted_id
         return result_id
@@ -36,7 +42,7 @@ class MongoInterface:
         for document in cursor:
             #document['_id'] = str(document['_id'])
             del document['_id']
-            document = from_dict(data_class=ModelResult, data=document)
+            #document = from_dict(data_class=ModelResult, data=document)
             documents.append(document)
         return documents
         #print("Find", ret, ret.matched_count, ret.modified_count)

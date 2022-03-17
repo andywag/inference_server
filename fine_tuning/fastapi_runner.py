@@ -51,10 +51,10 @@ class ModelResults:
     results:List[ModelResult]
 
 @app.get("/results")
-def get_results() -> ModelResults:
+def get_results():
     mongo = MongoInterface()
     results = mongo.get_all_results()
-    return ModelResults(results)
+    return results
 
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
@@ -80,7 +80,9 @@ def run_tune(model_input:ModelConfig) -> ModelResponse:
     
     print(model_input)
     model_description_dict = dataclasses.asdict(model_description)
-    result = run_dict.delay(model_description_dict, str(result_id))
+    uuid = run_dict.delay(model_description_dict, str(result_id))
+    # Attach the ID to the Database
+    mongo.update_id(result_id, str(uuid))
 
     return ModelResponse(str(result_id))
     # Create the Model
