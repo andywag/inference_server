@@ -28,11 +28,12 @@ def create_data_loader(model_description:ModelDescription, tokenizer, options):
 
 def main(model_description:ModelDescription, result_id:str, celery, logger):
 
-
+    model_description = model_description.model_description
     mongo = MongoInterface()
 
+    result_id = ObjectId(result_id)
     # Create Result In Mongo Database
-    
+    logger.info(f"Update Status {result_id}")
     mongo.update_status(result_id,"LoadingData")
     try :
         options = get_options(model_description)
@@ -41,7 +42,7 @@ def main(model_description:ModelDescription, result_id:str, celery, logger):
         data_loader = create_data_loader(model_description, tokenizer, options)
     except Exception as e:
         mongo.update_status(result_id,"Data Error",str(e))
-        logger.info("Data Loading Error", str(e))
+        logger.info(f"Data Loading Error {str(e)}")
 
     try :
         mongo.update_status(result_id,"Compiling")
@@ -51,7 +52,7 @@ def main(model_description:ModelDescription, result_id:str, celery, logger):
         model_ipu = poptorch.trainingModel(model, options, optimizer)
     except Exception as e:
         mongo.update_status(result_id,"Compile Error",str(e))
-        logger.info("Model Compilation Error", str(e))
+        logger.info(f"Model Compilation Error {str(e)}")
 
     mongo.update_status(result_id,"Running")
 
