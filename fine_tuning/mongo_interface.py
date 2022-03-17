@@ -17,6 +17,11 @@ class MongoInterface:
             {"$set":  {"uuid":  uuid} } 
         )
 
+    def update_host(self, result_id, hostname):
+        self.collection.update_one({"_id": result_id},
+            {"$set":  {"hostname":  hostname} } 
+        )
+
 
     def create_result(self, result_dict):
         result_id = self.collection.insert_one(result_dict).inserted_id
