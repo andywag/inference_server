@@ -19,10 +19,6 @@ def handle_custom_ops(config):
     else:
         exit()
 
-@unique
-class BertTaskEnum(str,Enum):
-    SEQUENCE = "Sequence"
-    TOKEN = "Token"
 
 @dataclass
 class BertSpecific(ModelSpecific):
@@ -31,7 +27,12 @@ class BertSpecific(ModelSpecific):
     embedding_serialization_factor:int=1
     tuning_type:str = "Sequence"
     num_labels:int = 3
-    #tuning_type:BertTaskEnum=BertTaskEnum.SEQUENCE
+
+    
+
+@dataclass 
+class BertDescription(ModelDescription):
+    model_specific:BertSpecific
 
     def get_model(self, model_description, config, half=True):
         handle_custom_ops(config)

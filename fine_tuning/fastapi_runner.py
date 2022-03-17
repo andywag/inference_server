@@ -55,10 +55,9 @@ def get_results() -> ModelResults:
     mongo = MongoInterface()
     results = mongo.get_all_results()
     return ModelResults(results)
-    #return results
 
 @app.post("/tune")
-def run_bart(model_input:ModelConfig) -> ModelResponse:
+def run_tune(model_input:ModelConfig) -> ModelResponse:
     print(model_input)
     # Create the Model
     model_description = model_input.create_model_description()
@@ -66,7 +65,8 @@ def run_bart(model_input:ModelConfig) -> ModelResponse:
     bert_specific = BertSpecific("bert")
     bert_specific.tuning_type = model_input.classifier
     bert_specific.num_labels = model_input.num_labels
-    bert_specific_dict = dataclasses.asdict(BertSpecific("bert"))
+    bert_specific_dict = dataclasses.asdict(bert_specific)
+    print("Here", bert_specific.num_labels)
     # Create the Model Result
     result = ModelResult("", "", model_description, list(), list())
     result_dict = dataclasses.asdict(result)
