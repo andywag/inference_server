@@ -60,6 +60,7 @@ class BertInterfaceWrapper():
             self.runner,  self.internal_args = bi.create_model_external(config, {})
         except Exception as e:
             log.error("Failed to Create", e)
+            sys.exit(0)
 
 
         # Size Parameters for the System

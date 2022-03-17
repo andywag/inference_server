@@ -12,13 +12,24 @@ class MongoInterface:
         self.db = self.client.run_database
         self.collection = self.db.fine_tuning
 
+    def update_id(self, result_id, uuid):
+        self.collection.update_one({"_id": result_id},
+            {"$set":  {"uuid":  uuid} } 
+        )
+
+    def update_host(self, result_id, hostname):
+        self.collection.update_one({"_id": result_id},
+            {"$set":  {"hostname":  hostname} } 
+        )
+
+
     def create_result(self, result_dict):
         result_id = self.collection.insert_one(result_dict).inserted_id
         return result_id
 
-    def update_status(self, result_id, value):
+    def update_status(self, result_id, value, message=None):
         self.collection.update_one({"_id": result_id},
-            {"$push":  {"status":  {"status":value, "time":Int64(time.time()) }} } 
+            {"$push":  {"status":  {"status":value, "time":Int64(time.time()),"detail":message}} } 
         )
         
 
@@ -27,14 +38,16 @@ class MongoInterface:
             {"$push":  {"results":  value } } 
         )
 
+    def get_result(self, result_id):
+        return self.collection.find_one({'_id':result_id})
+
     def get_all_results(self):
-        cursor = self.collection.find({}).sort("_id",-1) 
+        cursor = self.collection.find({})
         documents = []
         for document in cursor:
             #document['_id'] = str(document['_id'])
             del document['_id']
-            document = from_dict(data_class=ModelResult, data=document)
+            #document = from_dict(data_class=ModelResult, data=document)
             documents.append(document)
-        print("Returning Documnents", len(documents))
         return documents
         #print("Find", ret, ret.matched_count, ret.modified_count)
