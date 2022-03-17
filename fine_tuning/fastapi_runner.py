@@ -40,6 +40,7 @@ class ModelConfig:
         model_description.checkpoint = self.checkpoint
         model_description.execution_description.epochs = self.epochs
         model_description.execution_description.learning_rate = self.learning_rate
+        model_description.dataset.name = self.dataset
         return model_description
 
 @dataclass
