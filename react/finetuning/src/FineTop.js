@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 
 
 import FineForm from './FineForm'
-import ResultTable from './ResultTable'
+import ResultTable from './ResultTableGrid'
 import ResultChart from './ResultChart'
 
 function FineTop(props) {
@@ -13,8 +13,11 @@ function FineTop(props) {
     const [selected, setSelected] = useState("");
 
     var data = [];
+    var description;
     if (resultMap.hasOwnProperty(selected)) {
+        //console.log(resultMap[selected]);
         data = resultMap[selected].results;
+        description = resultMap[selected].description;
     }
     
 
@@ -27,7 +30,7 @@ function FineTop(props) {
                 <ResultTable setResultMap= {setResultMap} selected={selected} setSelected={setSelected}/>
             </Grid>
             <Grid item xs={6}>
-                <ResultChart data = {data}/>
+                <ResultChart data = {data} description={description}/>
             </Grid>
        </Grid>
     )
