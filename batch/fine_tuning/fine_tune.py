@@ -1,15 +1,15 @@
 from transformers import AutoTokenizer, AutoConfig
-from fine_tune_config import ModelDescription, ModelResult
-from ipu_options import get_options
+from .fine_tune_config import ModelDescription, ModelResult
+from .ipu_options import get_options
 from datasets import load_dataset
-from optimization import get_optimizer
+from .optimization import get_optimizer
 
 import poptorch
 from celery import states
 import pymongo
 import dataclasses
 from bson.objectid import ObjectId
-from mongo_interface import MongoInterface
+from .mongo_interface import MongoInterface
 import time
 import socket
 

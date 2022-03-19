@@ -1,7 +1,7 @@
     
 import pymongo
 from dacite import from_dict
-from fine_tune_config import ModelResult, StatusLog
+from .fine_tune_config import ModelResult, StatusLog
 import time
 from bson.int64 import Int64
 
@@ -45,9 +45,6 @@ class MongoInterface:
         cursor = self.collection.find({})
         documents = []
         for document in cursor:
-            #document['_id'] = str(document['_id'])
             del document['_id']
-            #document = from_dict(data_class=ModelResult, data=document)
             documents.append(document)
         return documents
-        #print("Find", ret, ret.matched_count, ret.modified_count)

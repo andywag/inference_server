@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 from enum import Enum, unique
-from fine_tune_config import ModelDescription
+from ..fine_tune_config import ModelDescription
 from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 import ctypes
 import os
