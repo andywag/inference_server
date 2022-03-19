@@ -12,8 +12,8 @@ logger = get_task_logger(__name__)
 
 
 
-@app.task(bind=True)
-def run_dict(self, model_description_dict:dict, result_id:str):
+#@app.task(bind=True)
+def run_infer(self, model_description_dict:dict, result_id:str):
     self.update_state(state=states.STARTED)
 
     # TODO : Make Generic Support for Model

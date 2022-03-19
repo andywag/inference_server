@@ -51,7 +51,7 @@ def main(top_description, result_id:str, celery, logger):
 
     try :
         mongo.update_status(result_id,"Compiling")
-        model = top_description.get_model(config, logger, mongo, half=True)
+        model = top_description.get_model(config, logger, mongo, result_id, half=True)
         optimizer = get_optimizer(model_description, model)
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)
