@@ -6,9 +6,11 @@ from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTo
 import ctypes
 import os
 
+
+
         
 
-def handle_custom_ops(config):
+def handle_custom_ops(config, logger, mongo, result_id):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
     if os.path.exists(CUSTOM_OP_PATH):
@@ -17,6 +19,8 @@ def handle_custom_ops(config):
         ops_and_patterns.setEmbeddingSize(config.hidden_size)
         ops_and_patterns.setHiddenSize(config.hidden_size)
     else:
+        logger.error("Couldn't Load Custom Ops")
+        mongo.update_status(result_id,"Compiling")
         exit()
 
 
@@ -35,21 +39,19 @@ class BertDescription:
     model_description:ModelDescription=ModelDescription()
     model_specific:BertSpecific=BertSpecific()
 
-    def get_model(self, config, half=True):
+    def get_model(self, config, logger, mongo, result_id, half=True):
         # Load Custom Ops
         # TODO : Add Error Condition
-        handle_custom_ops(config)
+        handle_custom_ops(config, logger, mongo, result_id)
         config.embedding_serialization_factor=self.model_specific.embedding_serialization_factor
         config.layers_per_ipu=self.model_description.ipu_layout.layers_per_ipu
         config.recompute_checkpoint_every_layer=self.model_description.ipu_options.recompute_checkpoint_every_layer
         config.num_labels = self.model_specific.num_labels
-        print("Creating", self.model_specific.num_labels, self.model_description.execution_description.epochs)
 
         if self.model_specific.tuning_type == "Sequence":
             model = PipelinedBertForSequenceClassification.from_pretrained(self.model_description.checkpoint, config=config).half()
             return model
         elif self.model_specific.tuning_type == "Token":
-            print("Creating Token Model")
             model = PipelinedBertForTokenClassification.from_pretrained(self.model_description.checkpoint, config=config).half()
             return model
         else:
