@@ -15,6 +15,7 @@ from bert_model.modeling import PipelinedBertForSequenceClassification, Pipeline
 
 logger = logging.getLogger()
 import traceback
+import numpy as np
 
 def create_data_loader(inference_config:InferenceConfig, tokenizer, options):
     dataset = load_dataset(inference_config.dataset)
@@ -23,8 +24,8 @@ def create_data_loader(inference_config:InferenceConfig, tokenizer, options):
 
     tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
         max_length=inference_config.detail.sequence_length, truncation=True, padding=True),batched=True)
-    tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask'])
-    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size)
+    tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask','label'])
+    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=True)
 
     return data_loader
 
@@ -84,17 +85,23 @@ def main(inference_config:InferenceConfig):
     results = []
     epoch = 0 
     step = 0
+
+    errors,samples = 0,0
     while True:
-        
-        data = next(iter_loader)
-           
+        try :
+            data = next(iter_loader)
+        except Exception as e:
+            break
+
         result = model_ipu(data['input_ids'],
             data['attention_mask'],
             data['token_type_ids'])
 
-        logger.info(f"Result {result}")
-
-
+        #logger.info(f"Result {result} {data['label']}")
+        error = (result[1] - data['label']).numpy()
+        errors += np.count_nonzero(error)
+        samples += len(error)
+        logger.info(f"Accuracy {errors/samples}")
         step += 1
 
         

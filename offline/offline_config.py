@@ -21,7 +21,7 @@ class InferenceConfig:
     dataset:str='imdb'
     tokenizer:str='bert-base-uncased'
     model:str='bert-base-uncased'
-    checkpoint:str='bert-base-uncased'
+    checkpoint:str='textattack/bert-base-uncased-imdb'
 
     ipu:Ipu = Ipu()
     detail:Detail=Detail()
