@@ -1,23 +1,23 @@
 from transformers import AutoTokenizer, AutoConfig
-from ipu_options import get_options
+from .ipu_options import get_options
 from datasets import load_dataset
 
 import poptorch
 from celery import states
 import dataclasses
 
-from offline_config import InferenceConfig
+from .offline_config import InferDescription
 import os
 import ctypes
 import sys
 import logging
-from bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
+from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 
 logger = logging.getLogger()
 import traceback
 import numpy as np
 
-def create_data_loader(inference_config:InferenceConfig, tokenizer, options):
+def create_data_loader(inference_config:InferDescription, tokenizer, options):
     dataset = load_dataset(inference_config.dataset)
     dataset = dataset['test']
     #print(dataset)
@@ -46,7 +46,7 @@ def handle_error(message:str, e=None):
     #    traceback.print_exception(e)
     sys.exit(1)
 
-def main(inference_config:InferenceConfig):
+def main(inference_config:InferDescription, result_id:str, celery, logger):
 
     try :
         options = get_options(inference_config.ipu)
@@ -111,5 +111,5 @@ def main(inference_config:InferenceConfig):
     return {"status":"Success", "results":results}
 
 if __name__ == "__main__":
-    inference_config = InferenceConfig()
+    inference_config = InferDescription()
     main(inference_config)

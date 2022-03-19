@@ -21,7 +21,7 @@ import numpy as np
 import ctypes
 import os
 
-from offline_config import Ipu
+from .offline_config import Ipu
 
 def constant_options(opts):
         # PopART options

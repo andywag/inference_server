@@ -17,7 +17,8 @@ class Classifier:
     num_labels:int=2
 
 @dataclass
-class InferenceConfig:
+class InferDescription:
+    name:str=''
     dataset:str='imdb'
     tokenizer:str='bert-base-uncased'
     model:str='bert-base-uncased'

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from .celery_worker import  run_dict
 import dataclasses
 from .fine_tune_config import ModelDescription, ModelResult
-from .bert_model.bert_config import BertSpecific
 import pymongo
 from .mongo_interface import MongoInterface
 from .bert_model.bert_config_new import BertDescription

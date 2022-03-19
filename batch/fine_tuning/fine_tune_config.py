@@ -87,5 +87,5 @@ class ModelResult:
     uuid:str
     hostname:str
     description:ModelDescription
-    results:List[Result]
-    status:List[StatusLog]
+    results:List[Result] =field(default_factory=lambda: [])
+    status:List[StatusLog] =field(default_factory=lambda: [])
