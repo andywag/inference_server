@@ -16,6 +16,7 @@ from .bert_model.modeling import PipelinedBertForSequenceClassification, Pipelin
 logger = logging.getLogger()
 import traceback
 import numpy as np
+import time
 
 def create_data_loader(inference_config:InferDescription, tokenizer, options):
     dataset = load_dataset(inference_config.dataset)
@@ -46,19 +47,24 @@ def handle_error(message:str, e=None):
     #    traceback.print_exception(e)
     sys.exit(1)
 
-def main(inference_config:InferDescription, result_id:str, celery, logger):
+def update_status(mongo, t, m=None):
+    if mongo is not None:
+        mongo.update_status(t,m)
 
+def main(inference_config:InferDescription, mongo, celery, logger):
+    
+    update_status(mongo, "Data")
     try :
         options = get_options(inference_config.ipu)
         config = AutoConfig.from_pretrained(inference_config.checkpoint)
         tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
         data_loader = create_data_loader(inference_config, tokenizer, options)
     except Exception as e:
-        #mongo.update_status(result_id,"Data Error",str(e))
+        update_status(mongo, "DataError",str(e))
         handle_error(f"Data Loading Error {str(e)}",e)
         return
 
-    
+    update_status(mongo, "Model")
     try :
         config = AutoConfig.from_pretrained(inference_config.checkpoint)
         config.embedding_serialization_factor=inference_config.ipu.embedding_serialization_factor
@@ -77,9 +83,11 @@ def main(inference_config:InferDescription, result_id:str, celery, logger):
 
         model_ipu = poptorch.inferenceModel(model, options)
     except Exception as e:
+        update_status(mongo, "ModelError",str(e))
         logger.info(f"Model Compilation Error {str(e)}")
         return 
 
+    update_status(mongo, "Running")
 
     iter_loader = iter(data_loader)
     results = []
@@ -88,21 +96,34 @@ def main(inference_config:InferDescription, result_id:str, celery, logger):
 
     errors,samples = 0,0
     while True:
+        tic = time.time()
         try :
             data = next(iter_loader)
         except Exception as e:
             break
 
+
         result = model_ipu(data['input_ids'],
             data['attention_mask'],
             data['token_type_ids'])
 
-        #logger.info(f"Result {result} {data['label']}")
         error = (result[1] - data['label']).numpy()
         errors += np.count_nonzero(error)
         samples += len(error)
         logger.info(f"Accuracy {errors/samples}")
+        result = {
+            'epoch':epoch,
+            'time': time.time() - tic,
+            'error':0.0,
+            'accuracy':errors/samples
+        }
+        
+        if mongo is not None:
+            mongo.update_result(result)
+
         step += 1
+
+
 
         
     model_ipu.detachFromDevice()

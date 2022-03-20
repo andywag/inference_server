@@ -32,18 +32,19 @@ class ModelResult(Generic[T]):
 
 class MongoInterface:
 
-    def __init__(self, collection):
+    def __init__(self, collection, result_id):
         self.client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
         self.db = self.client.run_database
         self.collection = self.db[collection]
+        self.result_id = result_id
 
-    def update_id(self, result_id, uuid):
-        self.collection.update_one({"_id": result_id},
+    def update_id(self, uuid):
+        self.collection.update_one({"_id": self.result_id},
             {"$set":  {"uuid":  uuid} } 
         )
 
-    def update_host(self, result_id, hostname):
-        self.collection.update_one({"_id": result_id},
+    def update_host(self, hostname):
+        self.collection.update_one({"_id": self.result_id},
             {"$set":  {"hostname":  hostname} } 
         )
 
@@ -52,14 +53,14 @@ class MongoInterface:
         result_id = self.collection.insert_one(result_dict).inserted_id
         return result_id
 
-    def update_status(self, result_id, value, message=None):
-        self.collection.update_one({"_id": result_id},
+    def update_status(self, value, message=None):
+        self.collection.update_one({"_id": self.result_id},
             {"$push":  {"status":  {"status":value, "time":Int64(time.time()),"detail":message}} } 
         )
         
 
-    def update_result(self, result_id, value):
-        self.collection.update_one({"_id": result_id},
+    def update_result(self, value):
+        self.collection.update_one({"_id": self.result_id},
             {"$push":  {"results":  value } } 
         )
 
