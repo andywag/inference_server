@@ -1,15 +1,15 @@
 from transformers import AutoTokenizer, AutoConfig
-from fine_tune_config import ModelDescription, ModelResult
-from ipu_options import get_options
+from .fine_tune_config import ModelDescription, ModelResult
+from .ipu_options import get_options
 from datasets import load_dataset
-from optimization import get_optimizer
+from .optimization import get_optimizer
 
 import poptorch
 from celery import states
 import pymongo
 import dataclasses
 from bson.objectid import ObjectId
-from mongo_interface import MongoInterface
+from .mongo_interface import MongoInterface
 import time
 import socket
 
@@ -51,7 +51,7 @@ def main(top_description, result_id:str, celery, logger):
 
     try :
         mongo.update_status(result_id,"Compiling")
-        model = top_description.get_model(config,half=True)
+        model = top_description.get_model(config, logger, mongo, result_id, half=True)
         optimizer = get_optimizer(model_description, model)
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)

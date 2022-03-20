@@ -21,15 +21,10 @@ import numpy as np
 import ctypes
 import os
 
-from fine_tune_config import ModelDescription
+from .offline_config import Ipu
 
 def constant_options(opts):
-    opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
-    opts.Precision.enableStochasticRounding(True)
-    opts.autoRoundNumIPUs(True)
-    opts.anchorMode(poptorch.AnchorMode.Sum)
         # PopART options
-    opts._Popart.set("disableGradAccumulationTensorStreams", True)
     opts._Popart.set("subgraphCopyingStrategy", int(popart.SubgraphCopyingStrategy.JustInTime))
     opts._Popart.set("outlineThreshold", 10.0)
     opts._Popart.set("accumulateOuterFragmentSettings.schedule",
@@ -45,35 +40,19 @@ def constant_options(opts):
     opts._Popart.set("engineOptions", engine_options)
 
 
-def get_options(model_description:ModelDescription):
-    np.random.seed(model_description.execution_description.random_seed)
+def get_options(options:Ipu):
 
-    if model_description.ipu_options.use_popdist:
-        opts = popdist.poptorch.Options(ipus_per_replica=model_description.ipu_layout.ipus_per_replica)
-    else:
-        opts = poptorch.Options()
-        opts.replicationFactor(model_description.execution_description.replication_factor)
-    
+
+    opts = poptorch.Options()
     constant_options(opts)
     
-    opts.randomSeed(model_description.execution_description.random_seed)
+    opts.deviceIterations(options.batches_per_step)
 
-    opts.deviceIterations(model_description.execution_description.batches_per_step)
-    opts.Training.gradientAccumulation(model_description.execution_description.gradient_accumulation)
-    opts.Training.accumulationAndReplicationReductionType(poptorch.ReductionType.Mean)
-    opts.Training.setAutomaticLossScaling(model_description.ipu_options.auto_loss_scaling)
-
-    opts.TensorLocations.setOptimizerLocation(
-        poptorch.TensorLocationSettings()
-        .useOnChipStorage(not model_description.ipu_options.optimizer_state_offchip)
-        .useReplicatedTensorSharding(model_description.ipu_options.replicated_tensor_sharding)
-    )
-
-    mem_prop = {
-        f'IPU{i}': model_description.ipu_layout.matmul_proportion[i]
-        for i in range(int(model_description.ipu_layout.ipus_per_replica))
-    }
-    opts.setAvailableMemoryProportion(mem_prop)
+    #mem_prop = {
+    #    f'IPU{i}': model_description.ipu_layout.matmul_proportion[i]
+    #    for i in range(int(model_description.ipu_layout.ipus_per_replica))
+    #}
+    #opts.setAvailableMemoryProportion(mem_prop)
 
     '''
     Set ipu specific options for the model, see documentation:
@@ -93,7 +72,7 @@ def get_options(model_description:ModelDescription):
     #    opts.enableExecutableCaching(config.executable_cache_dir)
 
     # Precision options
-    if model_description.ipu_options.enable_half_partials:
+    if options.enable_half_partials:
         opts.Precision.setPartialsType(torch.float16)
 
 
