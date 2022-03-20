@@ -4,14 +4,14 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from dataclasses import dataclass
 import dataclasses
-from fine_tuning.fine_tune_config import ModelDescription, ModelResult
-from fine_tuning.runner import ModelConfig, ModelResponse
 import pymongo
 
-from offline.runner import InferConfig
+from fine_runner import ModelConfig, ModelResponse
+from offline_runner import InferConfig
 
-import fine_tuning 
-import offline
+import fine_runner
+import offline_runner
+from mongo_common import get_infer_results
 
 app = FastAPI()
 app.add_middleware(
@@ -28,15 +28,20 @@ app.add_middleware(
 
 @app.get("/results")
 def get_results():
-    return fine_tuning.runner.get_results()
+    return fine_runner.get_results()
 
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
-    return fine_tuning.runner.run(model_input)
+    return fine_runner.run(model_input)
    
+
+@app.get("/infer_results")
+def get_results():
+    return get_infer_results()
+
 @app.post("/infer")
 def run_tune(model_input:InferConfig) :
-    return offline.runner.run(model_input)
+    return offline_runner.run(model_input)
     # Create the Model
     
 

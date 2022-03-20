@@ -33,7 +33,7 @@ class ModelResult(Generic[T]):
 
 class MongoInterface:
 
-    def __init__(self, collection, result_id):
+    def __init__(self, collection, result_id=None):
         self.client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
         self.db = self.client.run_database
         self.collection = self.db[collection]
@@ -49,8 +49,13 @@ class MongoInterface:
             {"$set":  {"uuid":  uuid} } 
         )
 
-    def update_host(self, hostname):
-        self.collection.update_one({"_id": self.result_id},
+    def update_id(self, result_id, uuid):
+        self.collection.update_one({"_id": result_id},
+            {"$set":  {"uuid":  uuid} } 
+        )
+
+    def update_host(self, result_id, hostname):
+        self.collection.update_one({"_id": result_id},
             {"$set":  {"hostname":  hostname} } 
         )
 
@@ -70,16 +75,22 @@ class MongoInterface:
             {"$push":  {"results":  value } } 
         )
 
-    def get_result(self, result_id):
-        return self.collection.find_one({'_id':result_id})
 
-    def get_all_results(self):
-        cursor = self.collection.find({})
-        documents = []
-        for document in cursor:
-            del document['_id']
-            documents.append(document)
-        return documents
+client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
+db = client.run_database
+infer = db.infer
+
+def get_infer_result(self, result_id):
+    return infer.find_one({'_id':result_id})
+
+def get_infer_results():
+    cursor = infer.find({})
+    documents = []
+    for document in cursor:
+        del document['_id']
+        documents.append(document)
+    return documents
+
 
 def create_mongo_interface(model_description:T):
     mongo = MongoInterface("infer")

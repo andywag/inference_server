@@ -1,7 +1,7 @@
 
 from typing import Optional, List
 from dataclasses import dataclass
-from .celery_worker import  run_infer
+from celery_worker import  run_infer
 import dataclasses
 import pymongo
 

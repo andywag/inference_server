@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from dataclasses import dataclass
-from .celery_worker import  run_fine
+from ..celery_worker import  run_fine
 import dataclasses
 from .fine_tune_config import ModelDescription, ModelResult
 import pymongo
