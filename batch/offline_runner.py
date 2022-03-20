@@ -1,11 +1,11 @@
 
 from typing import Optional, List
 from dataclasses import dataclass
-from .celery_worker import  run_infer
+from celery_worker import  run_infer
 import dataclasses
 import pymongo
 
-from .offline_config import InferDescription
+from offline.offline_config import InferDescription
 from mongo_common import create_mongo_interface
 
 @dataclass
