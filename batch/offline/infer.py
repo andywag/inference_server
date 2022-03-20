@@ -19,11 +19,23 @@ import numpy as np
 import time
 
 def create_data_loader(inference_config:InferDescription, tokenizer, options):
-    dataset = load_dataset(inference_config.dataset)
-    dataset = dataset['test']
-    #print(dataset)
+    infer_dataset = inference_config.dataset
+    data_tag = infer_dataset.split(",")
 
-    tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+    data_internal = data_tag[0].split(":")
+    if len(data_internal) == 1:
+        dataset = load_dataset(data_internal[0])
+    else:
+        print("Load", data_internal)
+        dataset = load_dataset(data_internal[0], data_internal[1])
+    print("Starting", data_tag)
+    for tag in data_tag[1:-1]:
+        dataset = dataset[tag]
+    print("Loading DataSet", data_tag, dataset[0])
+    #print(dataset[0])
+    #print(dataset[0])
+
+    tokenized_dataset = dataset.map(lambda x: tokenizer(x[data_tag[-1]],
         max_length=inference_config.detail.sequence_length, truncation=True, padding=True),batched=True)
     tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask','label'])
     data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=True)
@@ -71,7 +83,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         config.num_labels = inference_config.classifier.num_labels
         config.layers_per_ipu = [24]
         config.recompute_checkpoint_every_layer=False
-        
+        logger.info("HEREIM")
         if inference_config.classifier.classifier_type == 'Sequence':
             model = PipelinedBertForSequenceClassification.from_pretrained(inference_config.checkpoint, config=config).half()
         elif inference_config.classifier.classifier_type == 'Token':
@@ -82,6 +94,8 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             handle_error("Classifier Not Found")
 
         model_ipu = poptorch.inferenceModel(model, options)
+        
+
     except Exception as e:
         update_status(mongo, "ModelError",str(e))
         logger.info(f"Model Compilation Error {str(e)}")
@@ -94,12 +108,14 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     epoch = 0 
     step = 0
 
+    logger.info(f"Running {len(iter_loader)}")
     errors,samples = 0,0
     while True:
         tic = time.time()
         try :
             data = next(iter_loader)
         except Exception as e:
+            logger.info("Finished with Dataset")
             break
 
 
@@ -111,15 +127,15 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         errors += np.count_nonzero(error)
         samples += len(error)
         logger.info(f"Accuracy {errors/samples}")
-        result = {
-            'epoch':epoch,
-            'time': time.time() - tic,
-            'error':0.0,
-            'accuracy':errors/samples
-        }
-        
+        #result = {
+        #    'epoch':epoch,
+        #    'time': time.time() - tic,
+        #    'error':0.0,
+        #    'accuracy':errors/samples
+        #}
+
         if mongo is not None:
-            mongo.update_result(result)
+            mongo.update_accuracy(1.0-errors/samples)
 
         step += 1
 

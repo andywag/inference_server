@@ -49,13 +49,13 @@ class MongoInterface:
             {"$set":  {"uuid":  uuid} } 
         )
 
-    def update_id(self, result_id, uuid):
-        self.collection.update_one({"_id": result_id},
+    def update_id(self,  uuid):
+        self.collection.update_one({"_id": self.result_id},
             {"$set":  {"uuid":  uuid} } 
         )
 
-    def update_host(self, result_id, hostname):
-        self.collection.update_one({"_id": result_id},
+    def update_host(self, hostname):
+        self.collection.update_one({"_id": self.result_id},
             {"$set":  {"hostname":  hostname} } 
         )
 
