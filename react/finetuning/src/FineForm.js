@@ -13,7 +13,7 @@ function FineForm(props) {
   const [model, setModel] = useState("BERT");
   const [modelSize, setModelSize] = useState("Base");
   const [tokenizer, setTokenizer] = useState("bert-base-uncased");
-  const [checkpoint, setCheckpoint] = useState("bert-base-uncased");
+  const [checkpoint, setCheckpoint] = useState("textattack/bert-base-uncased-imdb");
   const [dataset, setDataset] = useState("imdb");
   const [optimizer, setOptimizer] = useState("ADAM");
   const [learningRate, setLearningRate] = useState(.0001);
