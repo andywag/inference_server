@@ -95,13 +95,35 @@ function BatchTable(props) {
       
     }
 
+    const getName = (row) => {
+      if (row.description) {
+        return row.description.name
+      }
+      return ""
+  }
+
+
+    const getTime = (row) => {
+      if (row.status && row.status.length > 0) {
+        return moment(new Date(row.status[row.status.length-1].time * 1000)).format('MM-DD-h:mm')
+      }
+      return ""
+  }
+
+    const getStatus = (row) => {
+        if (row.status && row.status.length > 0) {
+          return row.status[row.status.length-1].status
+        }
+        return ""
+    }
+
     const getRows = () => {
       const rr = results.map((row, index) => (
         { 
           id:index,
-          name:row.description.name, 
-          status:row.status[row.status.length-1].status,
-          time: moment(new Date(row.status[row.status.length-1].time * 1000)).format('MM-DD-h:mm'),
+          name:getName(row), 
+          status:getStatus(row),
+          time: getTime(row),
           host:getHost(row),
           accuracy:row.accuracy
       }));

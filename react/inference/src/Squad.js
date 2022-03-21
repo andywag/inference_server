@@ -59,12 +59,7 @@ function Squad(props) {
   const names = [0,1,2]
 
 
-  const exampleChange = (event) => {
-    setQuestion(examples[event.target.value].question)
-    setAnswer(examples[event.target.value].context)
-    setExample(event.target.value)
-    console.log(event.target.value)
-  }
+
 
   const updateExample = (x) => {
     setQuestion(examples[x].question)

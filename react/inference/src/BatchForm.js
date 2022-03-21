@@ -3,19 +3,67 @@
 import {Button, Grid, Box} from '@mui/material'
 import React, { useState, useEffect } from 'react';
 
-import {FormControl, FormControlLabel, FormLabel, RadioGroup, Radio, TextField, Select, MenuItem, InputLabel} from '@mui/material';
+import {FormGroup, FormControlLabel} from '@mui/material';
 import {SimpleText, SimpleSelect} from './FormBlocks'
+import SelectExample from './SelectExample';
+import { Checkbox } from '@mui/material';
 
+const examples = [
+  {
+    name:"imdb",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"textattack/bert-base-uncased-imdb",
+    dataset:"imdb,train,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"Sequence",
+    num_labels:2},
+  {
+    name:"indonlu",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"ayameRushia/indobert-base-uncased-finetuned-indonlu-smsa",
+    dataset:"indonlu:smsa,train,text",
+    tokenizer:"ayameRushia/indobert-base-uncased-finetuned-indonlu-smsa",
+    classifier:"Sequence",
+    num_labels:3
+  },
+  {
+    name:"ner",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"dslim/bert-base-NER",
+    dataset:"wikitext:wikitext-103-v1,test,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"Token",
+    num_labels:9
+  }
+]
 
 function FineForm(props) {
   
+  const [example, setExample] = useState("Example 1");
+  const updateExample = (x) => {
+    console.log(examples[x].model_type)
+    setRunId(examples[x].name);
+    setModel(examples[x].model_type);
+    setModelSize(examples[x].model_size);
+    setTokenizer(examples[x].tokenizer);
+    setCheckpoint(examples[x].checkpoint);
+    setDataset(examples[x].dataset);
+    setClassifier(examples[x].classifier);
+    setNumLabels(examples[x].num_labels);
+  }
+
+
   const [runId, setRunId] = useState("");
   const [model, setModel] = useState("BERT");
   const [modelSize, setModelSize] = useState("Base");
   const [tokenizer, setTokenizer] = useState("bert-base-uncased");
   const [checkpoint, setCheckpoint] = useState("bert-base-uncased");
   const [dataset, setDataset] = useState("imdb");
-  
+  const [textName, setTextName] = useState("");
+
 
   const [classifier, setClassifier] = useState("Sequence");
   const [numLabels, setNumLabels] = useState(3);
@@ -68,18 +116,22 @@ function FineForm(props) {
         <SimpleSelect label="Size" value={modelSize} set={setModelSize} options={["Base","Medium","Large"]} grid={3}/>
     </Grid>
     <Grid container padding={1}>
-        <SimpleText label="tokenizer" value={tokenizer} set={setTokenizer} grid={3}/>
-        <SimpleText label="checkpoint" value={checkpoint} set={setCheckpoint} grid={3}/>
-        <SimpleText label="dataset" value={dataset} set={setDataset} grid={3}/>
+      <SimpleText label="dataset" value={dataset} set={setDataset} grid={3}/>
+      <SimpleText label="tokenizer" value={tokenizer} set={setTokenizer} grid={3}/>
+    </Grid>
+    <Grid container padding={1}>
+      <SimpleText label="checkpoint" value={checkpoint} set={setCheckpoint} grid={3}/>
     </Grid>
     <Grid container padding={1}>
         <SimpleSelect label="classifier" value={classifier} set={setClassifier} options={["Token","Sequence","MLM"]} grid={3}/>
         <SimpleText label="numLabels" value={numLabels} set={setNumLabels} grid={3}/>
     </Grid>
     <Grid container padding={1}>
-      <Grid item xs={1}>
+      <Grid item xs={2}>
          <Button variant="contained" color="primary" type="submit" size="small" onClick={submit}>Submit</Button>
       </Grid>
+      <Grid item xs={2} ><SelectExample updateExample={updateExample}/></Grid>
+
     </Grid>
   
   </Grid>
