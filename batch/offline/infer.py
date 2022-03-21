@@ -97,7 +97,6 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             handle_error("Classifier Not Found")
 
         model_ipu = poptorch.inferenceModel(model, options)
-        
 
     except Exception as e:
         update_status(mongo, "ModelError",str(e))
@@ -114,10 +113,13 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         position_shape = list(input_shape)
         position_shape[1] = inference_config.classifier.num_labels
         position_mask = torch.zeros(position_shape, dtype=torch.int64)
-        model_ipu.compile(input_ids, input_ids, input_ids, position_mask)
+        if inference_config.classifier.classifier_type == 'MLM': 
+            model_ipu.compile(input_ids, input_ids, input_ids, position_mask)
+        else:
+            model_ipu.compile(input_ids, input_ids, input_ids)
     except Exception as e:
         update_status(mongo, "CompileError",str(e))
-        logger.info(f"Model Definition Error {str(e)}")
+        logger.info(f"Compilation Error {str(e)}")
         return 
 
     update_status(mongo, "Running")
@@ -159,7 +161,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             logger.info(f"Finished with Dataset {e}")
             return
 
-        samples += len(result[1])
+        samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step #len(result[1])
         if 'label' in data:
             error = (result[1] - data['label']).numpy()
             errors += np.count_nonzero(error)
@@ -169,7 +171,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
             
-            logger.info(f"QPS {samples/(time.time()-start_time)}")
+            logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
             mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
         step += 1
     update_status(mongo, "Finished")
