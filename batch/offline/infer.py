@@ -11,12 +11,13 @@ import os
 import ctypes
 import sys
 import logging
-from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
+from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification, PipelinedBertForPretraining
 
 logger = logging.getLogger()
 import traceback
 import numpy as np
 import time
+import torch
 
 def create_data_loader(inference_config:InferDescription, tokenizer, options):
     infer_dataset = inference_config.dataset
@@ -90,7 +91,8 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         elif inference_config.classifier.classifier_type == 'Token':
             model = PipelinedBertForTokenClassification.from_pretrained(inference_config.checkpoint, config=config).half()
         elif inference_config.classifier.classifier_type == 'MLM':
-            handle_error("MLM Current Not Supported")
+            config.pred_head_transform = False
+            model = PipelinedBertForPretraining.from_pretrained(inference_config.checkpoint, config=config).half()
         else:
             handle_error("Classifier Not Found")
 
@@ -107,7 +109,8 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        model_ipu.compile(first_data['input_ids'],first_data['attention_mask'],first_data['token_type_ids'])
+        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+        model_ipu.compile(input_ids,input_ids,input_ids)
     except Exception as e:
         update_status(mongo, "CompileError",str(e))
         logger.info(f"Model Definition Error {str(e)}")
@@ -122,8 +125,9 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
     errors,samples = 0,0
     
+    start_time = time.time()
     while True:
-        tic = time.time()
+        
         if first_data is not None:
             data = first_data
             first_data = None
@@ -135,7 +139,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
                 break
 
         try :
-            tic = time.time()
+            #tic = time.time()
 
             result = model_ipu(data['input_ids'],
                 data['attention_mask'],
@@ -146,14 +150,18 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             logger.info(f"Finished with Dataset {e}")
             return
 
+        samples += len(result[1])
         if 'label' in data:
             error = (result[1] - data['label']).numpy()
             errors += np.count_nonzero(error)
-            samples += len(error)
-            logger.info(f"Accuracy {errors/samples} QPS {len(result[1])/(time.time()-tic)}")
+            logger.info(f"Accuracy {errors/samples} QPS {samples/(time.time()-start_time)}")
        
             if mongo is not None:
-                mongo.update_accuracy(accuracy=1.0-errors/samples,qps=len(result[1])/(time.time()-tic))
+                mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
+        else:
+            
+            logger.info(f"QPS {samples/(time.time()-start_time)}")
+            mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
         step += 1
     update_status(mongo, "Finished")
 
