@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 
 import {FormGroup, FormControlLabel} from '@mui/material';
 import {SimpleText, SimpleSelect} from './FormBlocks'
-import SelectExample from './SelectExample';
+import SelectExampleBatch from './SelectExampleBatch';
 import { Checkbox } from '@mui/material';
 
 const examples = [
@@ -37,8 +37,20 @@ const examples = [
     tokenizer:"bert-base-uncased",
     classifier:"Token",
     num_labels:9
+  },
+  {
+    name:"mlm",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"bert-base-uncased",
+    dataset:"wikitext:wikitext-103-v1,test,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"MLM",
+    num_labels:48
   }
 ]
+
+const exampleNames = ['Imdb','Indonlu','NER','MLM']
 
 function FineForm(props) {
   
@@ -130,7 +142,7 @@ function FineForm(props) {
       <Grid item xs={2}>
          <Button variant="contained" color="primary" type="submit" size="small" onClick={submit}>Submit</Button>
       </Grid>
-      <Grid item xs={2} ><SelectExample updateExample={updateExample}/></Grid>
+      <Grid item xs={2} ><SelectExampleBatch exampleNames={exampleNames} updateExample={updateExample}/></Grid>
 
     </Grid>
   
