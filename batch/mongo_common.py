@@ -27,6 +27,7 @@ class ModelResult(Generic[T]):
     uuid:str=""
     hostname:str=""
     accuracy:float=0.0
+    qps:float=0.0
     results:List[Result]=field(default_factory=lambda: [])
     status:List[StatusLog]=field(default_factory=lambda: [])
 
@@ -39,10 +40,12 @@ class MongoInterface:
         self.collection = self.db[collection]
         self.result_id = result_id
 
-    def update_accuracy(self, accuracy):
+    def update_accuracy(self, accuracy=0.0, qps=0.0):
         self.collection.update_one({"_id": self.result_id},
-            {"$set":  {"accuracy":  accuracy} } 
+            {"$set":  {"accuracy":  accuracy, "qps":qps} } 
         )
+
+   
 
     def update_id(self, uuid):
         self.collection.update_one({"_id": self.result_id},

@@ -99,40 +99,61 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
     except Exception as e:
         update_status(mongo, "ModelError",str(e))
-        logger.info(f"Model Compilation Error {str(e)}")
+        logger.info(f"Model Definition Error {str(e)}")
+        return 
+
+    iter_loader = iter(data_loader)
+    update_status(mongo, "Compiling")
+    tic = time.time()
+    try :
+        first_data = next(iter_loader)
+        model_ipu.compile(first_data['input_ids'],first_data['attention_mask'],first_data['token_type_ids'])
+    except Exception as e:
+        update_status(mongo, "CompileError",str(e))
+        logger.info(f"Model Definition Error {str(e)}")
         return 
 
     update_status(mongo, "Running")
 
-    iter_loader = iter(data_loader)
+    
     results = []
     epoch = 0 
     step = 0
 
-    logger.info(f"Running {len(iter_loader)}")
     errors,samples = 0,0
+    
     while True:
         tic = time.time()
-        try :
-            data = next(iter_loader)
-        except Exception as e:
-            logger.info(f"Finished with Dataset {e}")
-            break
+        if first_data is not None:
+            data = first_data
+            first_data = None
+        else:
+            try :
+                data = next(iter_loader)
+            except Exception as e:
+                logger.info(f"Finished with Dataset {e}")
+                break
 
-        
-        result = model_ipu(data['input_ids'],
-            data['attention_mask'],
-            data['token_type_ids'])
+        try :
+            tic = time.time()
+
+            result = model_ipu(data['input_ids'],
+                data['attention_mask'],
+                data['token_type_ids'])
+            
+        except Exception as e:
+            update_status(mongo, "RunError",str(e))
+            logger.info(f"Finished with Dataset {e}")
+            return
 
         if 'label' in data:
             error = (result[1] - data['label']).numpy()
             errors += np.count_nonzero(error)
             samples += len(error)
-            logger.info(f"Accuracy {errors/samples}")
+            logger.info(f"Accuracy {errors/samples} QPS {len(result[1])/(time.time()-tic)}")
        
-
             if mongo is not None:
-                mongo.update_accuracy(1.0-errors/samples)
+                mongo.update_accuracy(accuracy=1.0-errors/samples,qps=len(result[1])/(time.time()-tic))
         step += 1
     update_status(mongo, "Finished")
 
