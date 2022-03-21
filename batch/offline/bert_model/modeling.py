@@ -175,7 +175,7 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
 
         # Select only the masked tokens for the classifier
         masked_output = self.gather_indices(sequence_output, masked_lm_positions)
-
+        
         prediction_scores, sequential_relationship_score = self.cls(masked_output, pooled_output)
         outputs = (prediction_scores, sequential_relationship_score,) + outputs[2:]
 

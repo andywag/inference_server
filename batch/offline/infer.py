@@ -109,8 +109,12 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
+        input_shape = first_data['input_ids'].shape
         input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        model_ipu.compile(input_ids,input_ids,input_ids)
+        position_shape = list(input_shape)
+        position_shape[1] = inference_config.classifier.num_labels
+        position_mask = torch.zeros(position_shape, dtype=torch.int64)
+        model_ipu.compile(input_ids, input_ids, input_ids, position_mask)
     except Exception as e:
         update_status(mongo, "CompileError",str(e))
         logger.info(f"Model Definition Error {str(e)}")
@@ -140,10 +144,15 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
         try :
             #tic = time.time()
-
-            result = model_ipu(data['input_ids'],
-                data['attention_mask'],
-                data['token_type_ids'])
+            if inference_config.classifier.classifier_type == 'MLM':
+                result = model_ipu(data['input_ids'],
+                    data['attention_mask'],
+                    data['token_type_ids'],
+                    position_mask)
+            else:
+                result = model_ipu(data['input_ids'],
+                    data['attention_mask'],
+                    data['token_type_ids'])
             
         except Exception as e:
             update_status(mongo, "RunError",str(e))

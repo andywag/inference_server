@@ -1,0 +1,85 @@
+Tracer cannot infer type of (tensor([[ 101,  102,    0,  ...,    0,    0,    0],
+        [ 101, 2043, 2582,  ...,    0,    0,    0],
+        [ 101, 1027, 1027,  ...,    0,    0,    0],
+        ...,
+        [ 101,  102,    0,  ...,    0,    0,    0],
+        [ 101, 2762, 1998,  ...,    0,    0,    0],
+        [ 101,  102,    0,  ...,    0,    0,    0]]), tensor([[1, 1, 0,  ..., 0, 0, 0],
+        [1, 1, 1,  ..., 0, 0, 0],
+        [1, 1, 1,  ..., 0, 0, 0],
+        ...,
+        [1, 1, 0,  ..., 0, 0, 0],
+        [1, 1, 1,  ..., 0, 0, 0],
+        [1, 1, 0,  ..., 0, 0, 0]]), tensor([[0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        ...,
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0],
+        [0, 0, 0,  ..., 0, 0, 0]]), <class 'inspect._empty'>)
+:Only tensors and (possibly nested) tuples of tensors, lists, or dictsare supported as inputs or outputs of traced functions, but instead got value of type type.
+Exception raised from toTypeInferredIValue at buildenv/lib/python3.6/site-packages/torch/include/torch/csrc/jit/python/pybind_utils.h:541 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x42 (0x7f2e548154b2 in /localdata/andyw/projects/venv/lib/python3.6/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, std::string const&) + 0x5b (0x7f2e54811dbb in /localdata/andyw/projects/venv/lib/python3.6/site-packages/torch/lib/libc10.so)
+frame #2: <unknown function> + 0xa3de3 (0x7f2e4a57fde3 in /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/poptorch_core.cpython-36m-x86_64-linux-gnu.so)
+frame #3: <unknown function> + 0xcca04 (0x7f2e4a5a8a04 in /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/poptorch_core.cpython-36m-x86_64-linux-gnu.so)
+frame #4: <unknown function> + 0xf26a6 (0x7f2e4a5ce6a6 in /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/poptorch_core.cpython-36m-x86_64-linux-gnu.so)
+frame #5: <unknown function> + 0x7ac4b (0x7f2e4a556c4b in /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/poptorch_core.cpython-36m-x86_64-linux-gnu.so)
+frame #6: /localdata/andyw/projects/venv/bin/python3.6() [0x50a5a5]
+frame #7: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #8: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #9: _PyFunction_FastCallDict + 0x2e2 (0x508fb2 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #10: /localdata/andyw/projects/venv/bin/python3.6() [0x595221]
+frame #11: /localdata/andyw/projects/venv/bin/python3.6() [0x54a621]
+frame #12: _PyObject_FastCallKeywords + 0x19c (0x5a9d2c in /localdata/andyw/projects/venv/bin/python3.6)
+frame #13: /localdata/andyw/projects/venv/bin/python3.6() [0x50a533]
+frame #14: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #15: /localdata/andyw/projects/venv/bin/python3.6() [0x5096c8]
+frame #16: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #17: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #18: _PyFunction_FastCallDict + 0xf5 (0x508dc5 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #19: /localdata/andyw/projects/venv/bin/python3.6() [0x595221]
+frame #20: PyObject_Call + 0x3e (0x5a058e in /localdata/andyw/projects/venv/bin/python3.6)
+frame #21: _PyEval_EvalFrameDefault + 0x19ff (0x50d4ff in /localdata/andyw/projects/venv/bin/python3.6)
+frame #22: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #23: _PyFunction_FastCallDict + 0x2e2 (0x508fb2 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #24: /localdata/andyw/projects/venv/bin/python3.6() [0x595221]
+frame #25: /localdata/andyw/projects/venv/bin/python3.6() [0x54a621]
+frame #26: PyObject_Call + 0x3e (0x5a058e in /localdata/andyw/projects/venv/bin/python3.6)
+frame #27: _PyEval_EvalFrameDefault + 0x19ff (0x50d4ff in /localdata/andyw/projects/venv/bin/python3.6)
+frame #28: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #29: /localdata/andyw/projects/venv/bin/python3.6() [0x509a00]
+frame #30: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #31: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #32: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #33: /localdata/andyw/projects/venv/bin/python3.6() [0x5893da]
+frame #34: PyObject_Call + 0x3e (0x5a058e in /localdata/andyw/projects/venv/bin/python3.6)
+frame #35: _PyEval_EvalFrameDefault + 0x19ff (0x50d4ff in /localdata/andyw/projects/venv/bin/python3.6)
+frame #36: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #37: /localdata/andyw/projects/venv/bin/python3.6() [0x509a00]
+frame #38: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #39: _PyEval_EvalFrameDefault + 0x1215 (0x50cd15 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #40: /localdata/andyw/projects/venv/bin/python3.6() [0x507cd4]
+frame #41: _PyFunction_FastCallDict + 0x2e2 (0x508fb2 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #42: /localdata/andyw/projects/venv/bin/python3.6() [0x595221]
+frame #43: /localdata/andyw/projects/venv/bin/python3.6() [0x54a621]
+frame #44: PyObject_Call + 0x3e (0x5a058e in /localdata/andyw/projects/venv/bin/python3.6)
+frame #45: _PyEval_EvalFrameDefault + 0x19ff (0x50d4ff in /localdata/andyw/projects/venv/bin/python3.6)
+frame #46: /localdata/andyw/projects/venv/bin/python3.6() [0x5096c8]
+frame #47: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #48: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #49: /localdata/andyw/projects/venv/bin/python3.6() [0x5096c8]
+frame #50: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #51: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #52: /localdata/andyw/projects/venv/bin/python3.6() [0x5096c8]
+frame #53: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
+frame #54: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #55: _PyFunction_FastCallDict + 0xf5 (0x508dc5 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #56: /localdata/andyw/projects/venv/bin/python3.6() [0x595221]
+frame #57: /localdata/andyw/projects/venv/bin/python3.6() [0x549b3f]
+frame #58: /localdata/andyw/projects/venv/bin/python3.6() [0x551391]
+frame #59: _PyObject_FastCallKeywords + 0x19c (0x5a9d2c in /localdata/andyw/projects/venv/bin/python3.6)
+frame #60: /localdata/andyw/projects/venv/bin/python3.6() [0x50a533]
+frame #61: _PyEval_EvalFrameDefault + 0x444 (0x50bf44 in /localdata/andyw/projects/venv/bin/python3.6)
+frame #62: /localdata/andyw/projects/venv/bin/python3.6() [0x5096c8]
+frame #63: /localdata/andyw/projects/venv/bin/python3.6() [0x50a3fd]
