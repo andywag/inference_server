@@ -321,12 +321,11 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
         self.classifier = poptorch.BeginBlock(self.classifier, "Classifier", ipu_id=ipu)
         logger("-----------------------------------------------------------")
 
-    def forward(self, input_ids, attention_mask, token_type_ids, labels):
+    def forward(self, input_ids, attention_mask, token_type_ids):
         inputs = {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-            "labels": labels
+            "token_type_ids": token_type_ids
         }
         output = super().forward(**inputs)
         if self.training:
