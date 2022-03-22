@@ -17,7 +17,8 @@ const examples = [
     dataset:"imdb,train,text",
     tokenizer:"bert-base-uncased",
     classifier:"Sequence",
-    num_labels:2},
+    num_labels:2
+  },
   {
     name:"indonlu",
     model_type:"BERT",
@@ -34,7 +35,17 @@ const examples = [
     model_size:"Base",
     checkpoint:"dslim/bert-base-NER",
     dataset:"wikitext:wikitext-103-v1,test,text",
-    tokenizer:"bert-base-uncased",
+    tokenizer:"bert-base-cased",
+    classifier:"Token",
+    num_labels:9
+  },
+  {
+    name:"ner_accuracy",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"dslim/bert-base-NER",
+    dataset:"conll2003,test,tokens",
+    tokenizer:"bert-base-cased",
     classifier:"Token",
     num_labels:9
   },
@@ -46,11 +57,11 @@ const examples = [
     dataset:"wikitext:wikitext-103-v1,test,text",
     tokenizer:"bert-base-uncased",
     classifier:"MLM",
-    num_labels:48
+    num_labels:32
   }
 ]
 
-const exampleNames = ['Imdb','Indonlu','NER','MLM']
+const exampleNames = ['Imdb','Indonlu','NER','NER(Accuracy)','MLM']
 
 function FineForm(props) {
   
@@ -68,17 +79,17 @@ function FineForm(props) {
   }
 
 
-  const [runId, setRunId] = useState("");
+  const [runId, setRunId] = useState("imdb");
   const [model, setModel] = useState("BERT");
   const [modelSize, setModelSize] = useState("Base");
   const [tokenizer, setTokenizer] = useState("bert-base-uncased");
-  const [checkpoint, setCheckpoint] = useState("bert-base-uncased");
-  const [dataset, setDataset] = useState("imdb");
+  const [checkpoint, setCheckpoint] = useState("textattack/bert-base-uncased-imdb");
+  const [dataset, setDataset] = useState("imdb,train,text");
   const [textName, setTextName] = useState("");
 
 
   const [classifier, setClassifier] = useState("Sequence");
-  const [numLabels, setNumLabels] = useState(3);
+  const [numLabels, setNumLabels] = useState(2);
 
 
 
