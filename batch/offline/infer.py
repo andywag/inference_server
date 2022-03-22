@@ -19,47 +19,107 @@ import numpy as np
 import time
 import torch
 
-def create_data_loader(inference_config:InferDescription, tokenizer, options):
-    infer_dataset = inference_config.dataset
-    data_tag = infer_dataset.split(",")
+
+class Base:
+    def __init__(self, inference_config:InferDescription):
+        self.inference_config = inference_config
+        self.dataset_columns = ['input_ids', 'token_type_ids', 'attention_mask']
+        
+    def create_config(self):
+        config = AutoConfig.from_pretrained(self.inference_config.checkpoint)
+        config.embedding_serialization_factor=self.inference_config.ipu.embedding_serialization_factor
+        config.num_labels = self.inference_config.classifier.num_labels
+        config.layers_per_ipu = [24]
+        config.recompute_checkpoint_every_layer=False
+        return config
+
+    def compile_inputs(self, first_data):
+        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+        return [input_ids, input_ids, input_ids]
+
+    def model_inputs(self, data):
+        return [data['input_ids'], data['token_type_ids'], data['attention_mask']]
+
+class Sequence(Base):
+    def __init__(self, inference_config):
+        super().__init__(inference_config)
+        self.model = PipelinedBertForSequenceClassification
+
+class Token(Base):
+    def __init__(self, inference_config):
+        super().__init__(inference_config)
+        self.model = PipelinedBertForTokenClassification
+
+class MLM(Base):
+    def __init__(self, inference_config):
+        super().__init__(inference_config)
+        self.model = PipelinedBertForPretraining
+
+    def create_config(self):
+        config = super().create_config()
+        config.pred_head_transform = False
+        return config
+
+    def compile_inputs(self, first_data):
+        inputs = super().compile_inputs(first_data)
+        
+        input_shape = first_data['input_ids'].shape
+        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+        position_shape = list(input_shape)
+        position_shape[1] = self.inference_config.classifier.num_labels
+        position_mask = torch.zeros(position_shape, dtype=torch.int64)
+        self.position_mask = position_mask
+        inputs.append(position_mask)
+        return inputs
+
+    def model_inputs(self, data):
+        m_inputs = super().model_inputs(data)
+        m_inputs.append(self.position_mask)
+        return m_inputs
+
+
+def create_dataset(dataset, model_class:Base, options):
+    """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
+    inference_config = model_class.inference_config
+    tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
+    tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+        max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
+
+    columns = model_class.dataset_columns
+    if 'label' in dataset.column_names:
+        columns.append('label')
+    tokenized_dataset.set_format(type='torch', columns=columns)
+
+    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=False)
+
+    return data_loader
+
+def decode_dataset_tag(tag):
+    data_tag = tag.split(",")
 
     data_internal = data_tag[0].split(":")
     if len(data_internal) == 1:
         dataset = load_dataset(data_internal[0])
     else:
-        print("Load", data_internal)
         dataset = load_dataset(data_internal[0], data_internal[1])
-    print("Starting", data_tag)
     for tag in data_tag[1:-1]:
         dataset = dataset[tag]
-   
-
-    tokenized_dataset = dataset.map(lambda x: tokenizer(x[data_tag[-1]],
-        max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
-    if inference_config.classifier.classifier_type == 'Sequence':
-        tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask','label'])
-    else:
-        tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask'])
     
-    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=True)
+    if data_tag[-1] != 'text':
+        dataset = dataset.map(lambda x:{'text':data_tag[-1]})
 
-    return data_loader
+    return dataset
 
-def handle_custom_ops(config):
-    file_dir = os.path.dirname(os.path.realpath(__file__))
-    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
-    if os.path.exists(CUSTOM_OP_PATH):
-        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
-        ops_and_patterns.setVocabSize(config.vocab_size)
-        ops_and_patterns.setEmbeddingSize(config.hidden_size)
-        ops_and_patterns.setHiddenSize(config.hidden_size)
-    else:
-        exit()
+def create_data_loader(model_class:Base, options):
+    dataset = decode_dataset_tag(model_class.inference_config.dataset)
+    return create_dataset(dataset, model_class, options)
+
+
 
 def handle_error(message:str, e=None):
     logger.error(message)
-    #if e is not None:
-    #    traceback.print_exception(e)
+    if e is not None:
+        traceback.print_exc()
     sys.exit(1)
 
 def update_status(mongo, t, m=None):
@@ -68,40 +128,36 @@ def update_status(mongo, t, m=None):
 
 def main(inference_config:InferDescription, mongo, celery, logger):
     
+    if inference_config.classifier.classifier_type == 'Sequence':
+        model_class = Sequence(inference_config)
+    elif inference_config.classifier.classifier_type == 'Token':
+        model_class = Token(inference_config)
+    elif inference_config.classifier.classifier_type == 'MLM':
+        model_class = MLM(inference_config)
+    else:
+        handle_error("Classifier Not Found") 
+
+    options = get_options(inference_config.ipu)
+
+    # Handle Data Loading
     update_status(mongo, "Data")
-    try :
-        options = get_options(inference_config.ipu)
-        config = AutoConfig.from_pretrained(inference_config.checkpoint)
-        tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
-        data_loader = create_data_loader(inference_config, tokenizer, options)
+    try :    
+        data_loader = create_data_loader(model_class, options)
     except Exception as e:
         update_status(mongo, "DataError",str(e))
         handle_error(f"Data Loading Error {str(e)}",e)
         return
 
+    # Model Compilation
     update_status(mongo, "Model")
     try :
-        config = AutoConfig.from_pretrained(inference_config.checkpoint)
-        config.embedding_serialization_factor=inference_config.ipu.embedding_serialization_factor
-        config.num_labels = inference_config.classifier.num_labels
-        config.layers_per_ipu = [24]
-        config.recompute_checkpoint_every_layer=False
-        if inference_config.classifier.classifier_type == 'Sequence':
-            model = PipelinedBertForSequenceClassification.from_pretrained(inference_config.checkpoint, config=config).half()
-        elif inference_config.classifier.classifier_type == 'Token':
-            model = PipelinedBertForTokenClassification.from_pretrained(inference_config.checkpoint, config=config).half()
-        elif inference_config.classifier.classifier_type == 'MLM':
-            config.pred_head_transform = False
-            model = PipelinedBertForPretraining.from_pretrained(inference_config.checkpoint, config=config).half()
-        else:
-            handle_error("Classifier Not Found")
-
+        config = model_class.create_config()
+        model = model_class.model.from_pretrained(model_class.inference_config.checkpoint, config=config).half()
         model_ipu = poptorch.inferenceModel(model, options)
-        
 
     except Exception as e:
         update_status(mongo, "ModelError",str(e))
-        logger.info(f"Model Definition Error {str(e)}")
+        handle_error(f"Data Loading Error {str(e)}",e)
         return 
 
     iter_loader = iter(data_loader)
@@ -109,23 +165,14 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        input_shape = first_data['input_ids'].shape
-        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        position_shape = list(input_shape)
-        position_shape[1] = inference_config.classifier.num_labels
-        position_mask = torch.zeros(position_shape, dtype=torch.int64)
-        model_ipu.compile(input_ids, input_ids, input_ids, position_mask)
+        model_ipu.compile(*model_class.compile_inputs(first_data))
+
     except Exception as e:
         update_status(mongo, "CompileError",str(e))
-        logger.info(f"Model Definition Error {str(e)}")
+        handle_error(e)
         return 
 
     update_status(mongo, "Running")
-
-    
-    results = []
-    epoch = 0 
-    step = 0
 
     errors,samples = 0,0
     
@@ -143,23 +190,13 @@ def main(inference_config:InferDescription, mongo, celery, logger):
                 break
 
         try :
-            #tic = time.time()
-            if inference_config.classifier.classifier_type == 'MLM':
-                result = model_ipu(data['input_ids'],
-                    data['attention_mask'],
-                    data['token_type_ids'],
-                    position_mask)
-            else:
-                result = model_ipu(data['input_ids'],
-                    data['attention_mask'],
-                    data['token_type_ids'])
-            
+            result = model_ipu(*model_class.model_inputs(data))
         except Exception as e:
             update_status(mongo, "RunError",str(e))
-            logger.info(f"Finished with Dataset {e}")
+            handle_error("Run Error", e)
             return
 
-        samples += len(result[1])
+        samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step 
         if 'label' in data:
             error = (result[1] - data['label']).numpy()
             errors += np.count_nonzero(error)
@@ -169,12 +206,11 @@ def main(inference_config:InferDescription, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
             
-            logger.info(f"QPS {samples/(time.time()-start_time)}")
+            logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
             mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
-        step += 1
     update_status(mongo, "Finished")
 
-        
+    
 
 
 
@@ -182,7 +218,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     model_ipu.detachFromDevice()
 
 
-    return {"status":"Success", "results":results}
+    return {"status":"Success", "results":[]}
 
 if __name__ == "__main__":
     inference_config = InferDescription()
