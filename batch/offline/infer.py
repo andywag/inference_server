@@ -33,10 +33,14 @@ def create_data_loader(inference_config:InferDescription, tokenizer, options):
     for tag in data_tag[1:-1]:
         dataset = dataset[tag]
    
+    #if 'label' not in dataset.column_names:
+    #    dataset = dataset.map(lambda x:{'label':0})
 
     tokenized_dataset = dataset.map(lambda x: tokenizer(x[data_tag[-1]],
         max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
-    if inference_config.classifier.classifier_type == 'Sequence':
+
+
+    if 'label' in dataset.column_names:
         tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask','label'])
     else:
         tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask'])
@@ -45,21 +49,9 @@ def create_data_loader(inference_config:InferDescription, tokenizer, options):
 
     return data_loader
 
-def handle_custom_ops(config):
-    file_dir = os.path.dirname(os.path.realpath(__file__))
-    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
-    if os.path.exists(CUSTOM_OP_PATH):
-        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
-        ops_and_patterns.setVocabSize(config.vocab_size)
-        ops_and_patterns.setEmbeddingSize(config.hidden_size)
-        ops_and_patterns.setHiddenSize(config.hidden_size)
-    else:
-        exit()
 
 def handle_error(message:str, e=None):
     logger.error(message)
-    #if e is not None:
-    #    traceback.print_exception(e)
     sys.exit(1)
 
 def update_status(mongo, t, m=None):
@@ -67,11 +59,11 @@ def update_status(mongo, t, m=None):
         mongo.update_status(t,m)
 
 def main(inference_config:InferDescription, mongo, celery, logger):
-    logger.info("Starting")
+    
+    # Handle Data Loading
     update_status(mongo, "Data")
     try :
         options = get_options(inference_config.ipu)
-        config = AutoConfig.from_pretrained(inference_config.checkpoint)
         tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
         data_loader = create_data_loader(inference_config, tokenizer, options)
     except Exception as e:
@@ -79,6 +71,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         handle_error(f"Data Loading Error {str(e)}",e)
         return
 
+    # Model Compilation
     update_status(mongo, "Model")
     try :
         config = AutoConfig.from_pretrained(inference_config.checkpoint)

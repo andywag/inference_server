@@ -23,13 +23,18 @@ import os
 
 from .offline_config import Ipu
 
-def constant_options(opts):
-        # PopART options
+
+
+def get_options(options:Ipu):
+
+    opts = poptorch.Options()
     opts._Popart.set("subgraphCopyingStrategy", int(popart.SubgraphCopyingStrategy.JustInTime))
     opts._Popart.set("outlineThreshold", 10.0)
     opts._Popart.set("accumulateOuterFragmentSettings.schedule",
                      int(popart.AccumulateOuterFragmentSchedule.OverlapMemoryOptimized))
     opts._Popart.set("accumulateOuterFragmentSettings.excludedVirtualGraphs", ["0"])
+    
+    # FIXME : Move to build directory
     opts.enableExecutableCaching('./cache_dir')
 
     engine_options = {
@@ -38,38 +43,8 @@ def constant_options(opts):
     }
 
     opts._Popart.set("engineOptions", engine_options)
-
-
-def get_options(options:Ipu):
-
-
-    opts = poptorch.Options()
-    constant_options(opts)
     
     opts.deviceIterations(options.batches_per_step)
-
-    #mem_prop = {
-    #    f'IPU{i}': model_description.ipu_layout.matmul_proportion[i]
-    #    for i in range(int(model_description.ipu_layout.ipus_per_replica))
-    #}
-    #opts.setAvailableMemoryProportion(mem_prop)
-
-    '''
-    Set ipu specific options for the model, see documentation:
-    https://docs.graphcore.ai/en/latest/
-    '''
-
-
-
-    # Numpy options
-
-
-
-    
-
-
-    #if config.executable_cache_dir:
-    #    opts.enableExecutableCaching(config.executable_cache_dir)
 
     # Precision options
     if options.enable_half_partials:
