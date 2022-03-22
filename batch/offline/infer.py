@@ -67,7 +67,7 @@ def update_status(mongo, t, m=None):
         mongo.update_status(t,m)
 
 def main(inference_config:InferDescription, mongo, celery, logger):
-    
+    logger.info("Starting")
     update_status(mongo, "Data")
     try :
         options = get_options(inference_config.ipu)
@@ -176,7 +176,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
         step += 1
     update_status(mongo, "Finished")
 
-        
+    
 
 
 
