@@ -75,9 +75,9 @@ function BatchTable(props) {
 
 
     const columns = [
-      { field: 'name', headerName: 'Name', width: 200 },
+      { field: 'name', headerName: 'Name', width: 100 },
       { field: 'status', headerName: 'Status', width: 130 },
-      { field: 'time', headerName: 'Time', width: 130 },
+      { field: 'time', headerName: 'Time', width: 220 },
       { field: 'host', headerName: 'Host', width: 130 },
       { field: 'accuracy', headerName: 'Accuracy', width: 130 },
       { field: 'qps', headerName: 'QPS', width: 130 }
@@ -105,7 +105,8 @@ function BatchTable(props) {
 
     const getTime = (row) => {
       if (row.status && row.status.length > 0) {
-        return moment(new Date(row.status[0].time * 1000)).format('MM-DD-h:mm')
+        return new Date(row.status[0].time * 1000)
+        //return moment(new Date(row.status[0].time * 1000)).format('MM-DD-h:mm')
       }
       return ""
   }

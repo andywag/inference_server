@@ -96,6 +96,7 @@ function Squad(props) {
   <Grid container spacing={2}>
     <Grid item xs={12}>
     <h1>BERT Large Squad Question and Answer (Currently Not Running)</h1>
+    <p>Due to IPU availability this model has been disabled.</p>
     </Grid>
     
     <Grid item xs={12}>
