@@ -7,6 +7,7 @@ import GPT2 from './GPT2.js'
 import Main from './Main.js'
 import Bart from './Bart.js'
 import Batch from './Batch.js'
+import FineTop from './FineTop';
 
 import { BrowserRouter, Router, Route, Routes, Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
@@ -48,6 +49,7 @@ function App() {
               <Box sx={{ml:5}}><Typography><Link to="/gpt2">GPT2</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/bart">BART</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/batch">BATCH</Link></Typography></Box>
+              <Box sx={{ml:5}}><Typography><Link to="/fine">FINE TUNING</Link></Typography></Box>
 
             </Toolbar>
 
@@ -61,6 +63,8 @@ function App() {
           <Route path="/gpt2" element={<GPT2/>}/> 
           <Route path="/bart" element={<Bart/>}/> 
           <Route path="/batch" element={<Batch/>}/> 
+          <Route path="/fine" element={<FineTop/>}/> 
+
         </Routes>
         </Box>
       </BrowserRouter>
