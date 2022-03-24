@@ -41,7 +41,8 @@ def run(model_input:InferConfig) -> ModelResponse:
     model_description_dict = dataclasses.asdict(model_description)
     uuid = run_infer.delay(model_description_dict, str(result_id))
     # Attach the ID to the Database
-    mongo.update_id(result_id, str(uuid))
+    mongo.update_id(str(uuid))
+    mongo.update_status("Submitted")
     print("Running Inference", result_id)
     return ModelResponse(str(result_id))
 

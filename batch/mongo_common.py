@@ -29,7 +29,7 @@ class ModelResult(Generic[T]):
     accuracy:float=0.0
     qps:float=0.0
     results:List[Result]=field(default_factory=lambda: [])
-    status:List[StatusLog]=field(default_factory=lambda: [])
+    status:List[StatusLog]=field(default_factory=lambda: [StatusLog("Submitted",Int64(time.time()))])
 
 
 class MongoInterface:
