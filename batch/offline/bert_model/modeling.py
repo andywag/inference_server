@@ -333,7 +333,8 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.logits
         else:
-            return output.logits
+            indices = torch.argmax(output.logits,dim=-1)
+            return output.logits, indices
 
     @classmethod
     def from_pretrained(cls, *args, **kwargs):

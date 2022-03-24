@@ -9,7 +9,7 @@ class Ipu:
 @dataclass 
 class Detail:
     sequence_length:int=384
-    batch_size:int=4
+    batch_size:int=16
 
 @dataclass
 class Classifier:

@@ -3,79 +3,17 @@ from .ipu_options import get_options
 from datasets import load_dataset
 
 import poptorch
-from celery import states
-import dataclasses
 
 from .offline_config import InferDescription
-import os
-import ctypes
 import sys
 import logging
-from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification, PipelinedBertForPretraining
-
 logger = logging.getLogger()
 import traceback
 import numpy as np
 import time
 import torch
 
-
-class Base:
-    def __init__(self, inference_config:InferDescription):
-        self.inference_config = inference_config
-        self.dataset_columns = ['input_ids', 'token_type_ids', 'attention_mask']
-        
-    def create_config(self):
-        config = AutoConfig.from_pretrained(self.inference_config.checkpoint)
-        config.embedding_serialization_factor=self.inference_config.ipu.embedding_serialization_factor
-        config.num_labels = self.inference_config.classifier.num_labels
-        config.layers_per_ipu = [24]
-        config.recompute_checkpoint_every_layer=False
-        return config
-
-    def compile_inputs(self, first_data):
-        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        return [input_ids, input_ids, input_ids]
-
-    def model_inputs(self, data):
-        return [data['input_ids'], data['token_type_ids'], data['attention_mask']]
-
-class Sequence(Base):
-    def __init__(self, inference_config):
-        super().__init__(inference_config)
-        self.model = PipelinedBertForSequenceClassification
-
-class Token(Base):
-    def __init__(self, inference_config):
-        super().__init__(inference_config)
-        self.model = PipelinedBertForTokenClassification
-
-class MLM(Base):
-    def __init__(self, inference_config):
-        super().__init__(inference_config)
-        self.model = PipelinedBertForPretraining
-
-    def create_config(self):
-        config = super().create_config()
-        config.pred_head_transform = False
-        return config
-
-    def compile_inputs(self, first_data):
-        inputs = super().compile_inputs(first_data)
-        
-        input_shape = first_data['input_ids'].shape
-        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        position_shape = list(input_shape)
-        position_shape[1] = self.inference_config.classifier.num_labels
-        position_mask = torch.zeros(position_shape, dtype=torch.int64)
-        self.position_mask = position_mask
-        inputs.append(position_mask)
-        return inputs
-
-    def model_inputs(self, data):
-        m_inputs = super().model_inputs(data)
-        m_inputs.append(self.position_mask)
-        return m_inputs
+from .infer_classes import Base, Sequence, Token, MLM
 
 
 def create_dataset(dataset, model_class:Base, options):
@@ -197,10 +135,12 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             return
 
         samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step 
-        if 'label' in data:
-            error = (result[1] - data['label']).numpy()
-            errors += np.count_nonzero(error)
-            logger.info(f"Accuracy {errors/samples} QPS {samples/(time.time()-start_time)}")
+        
+        error = model_class.handle_result(result, data)
+            
+        if error is not None:
+            errors += error
+            logger.info(f"Accuracy : {errors/samples} QPS : {samples/(time.time()-start_time)} Errors : {error}")
        
             if mongo is not None:
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
@@ -210,12 +150,8 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
     update_status(mongo, "Finished")
 
-    
-
-
-
-        
     model_ipu.detachFromDevice()
+    model_class.post_process()
 
 
     return {"status":"Success", "results":[]}
