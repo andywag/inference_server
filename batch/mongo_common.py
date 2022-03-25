@@ -34,10 +34,11 @@ class ModelResult(Generic[T]):
 
 class MongoInterface:
 
-    def __init__(self, collection, result_id=None):
+    def __init__(self, collection, result_collection, result_id=None):
         self.client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
         self.db = self.client.run_database
         self.collection = self.db[collection]
+        self.result_collection = self.db[result_collection]
         self.result_id = result_id
 
     def update_accuracy(self, accuracy=0.0, qps=0.0):
@@ -78,10 +79,15 @@ class MongoInterface:
             {"$push":  {"results":  value } } 
         )
 
+    def put_result(self, results_dict):
+        test_result = {'result_id':self.result_id, 'results':results_dict}
+        self.result_collection.insert_one(test_result)
+
 
 client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
 db = client.run_database
 infer = db.infer
+infer_results = db.infer_results
 
 def get_infer_result(self, result_id):
     return infer.find_one({'_id':result_id})
@@ -94,6 +100,7 @@ def get_infer_results():
         documents.append(document)
     return documents
 
+    
 
 def create_mongo_interface(model_description:T):
     mongo = MongoInterface("infer")
@@ -102,3 +109,6 @@ def create_mongo_interface(model_description:T):
     result_id = mongo.create_result(result_dict)
     mongo.update_status(result_id,"Submit")
     return mongo, result_id
+
+
+

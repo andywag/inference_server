@@ -49,7 +49,7 @@ class Base:
           
         return None
 
-    def post_process(self):
+    def post_process(self, mongo):
         pass
 
 
@@ -71,7 +71,7 @@ class Sequence(Base):
         else:
             return None
 
-    def post_process(self):
+    def post_process(self, mongo):
         results = []
         import pickle
         pickle.dump(self.result_store, open( "save.pik", "wb" ) )
@@ -80,14 +80,14 @@ class Sequence(Base):
             result = self.result_store[x]
             for y in range(len(result[1])):
                 count += 1
-                #logger.info(f"B {result[1]} {result[1].shape} {y} {result[1][y]}")
                 index = result[1][y].item()
-                #print("A", result[0].shape, result[0][y][index].item())
                 results.append({'class':index,'probability':result[0][y][index].item()})
-
-        print("Dumping Resutls", count, len(results))
-        with open('result.json', 'w') as outfile:
-            json.dump(results, outfile)
+        
+        mongo.put_result(results)
+        
+        #print("Dumping Resutls", count, len(results))
+        #with open('result.json', 'w') as outfile:
+        #    json.dump(results, outfile)
             
 
 class Token(Base):

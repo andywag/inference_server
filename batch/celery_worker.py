@@ -25,7 +25,7 @@ def run_fine(self, model_description_dict:dict, result_id:str):
 
 @app.task(bind=True)
 def run_infer(self, model_description_dict:dict, result_id:str):
-    mongo = MongoInterface("infer", ObjectId(result_id))
+    mongo = MongoInterface("infer", "infer_result", ObjectId(result_id))
     self.update_state(state=states.STARTED)
     mongo.update_host(socket.gethostname())
 

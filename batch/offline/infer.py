@@ -151,7 +151,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     update_status(mongo, "Finished")
 
     model_ipu.detachFromDevice()
-    model_class.post_process()
+    model_class.post_process(mongo)
 
 
     return {"status":"Success", "results":[]}
