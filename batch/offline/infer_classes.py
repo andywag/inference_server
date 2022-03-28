@@ -19,6 +19,7 @@ import numpy as np
 import time
 import torch
 import json
+import pickle
 
 class Base:
     def __init__(self, inference_config:InferDescription):
@@ -26,7 +27,12 @@ class Base:
         self.dataset_columns = ['input_ids', 'token_type_ids', 'attention_mask']
         self.result_store = []
         self.label_store = []
-        
+
+    def tokenize(self, tokenizer, dataset):
+        tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+            max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
+        return tokenized_dataset
+
     def create_config(self):
         config = AutoConfig.from_pretrained(self.inference_config.checkpoint)
         config.embedding_serialization_factor=self.inference_config.ipu.embedding_serialization_factor
@@ -74,7 +80,6 @@ class Sequence(Base):
     def post_process(self, mongo):
         results = []
         import pickle
-        pickle.dump(self.result_store, open( "save.pik", "wb" ) )
         count = 0
         for x in range(len(self.result_store)):
             result = self.result_store[x]
@@ -85,15 +90,48 @@ class Sequence(Base):
         
         mongo.put_result(results)
         
-        #print("Dumping Resutls", count, len(results))
-        #with open('result.json', 'w') as outfile:
-        #    json.dump(results, outfile)
+        
             
 
 class Token(Base):
     def __init__(self, inference_config):
         super().__init__(inference_config)
         self.model = PipelinedBertForTokenClassification
+        self.offset_store = []
+
+    def tokenize(self, tokenizer, dataset):
+        tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+            max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True,return_length=True),batched=True)
+        self.offset_store=tokenized_dataset['offset_mapping']
+        self.length_store=tokenized_dataset['length']
+        return tokenized_dataset
+
+    def handle_result(self, result, data):
+        self.result_store.append((result))
+        if 'label' in data:
+            self.label_store.append(data['label'])
+        
+        return None
+
+    def post_process(self, mongo):
+        data = self.result_store
+        offsets = self.offset_store
+        offset_index = 0
+        results = []
+        for x in range(len(data)):
+            for z in range(len(data[x][0])):
+                probabilities = data[x][0][z]
+                indices = data[x][1][z]
+                real_offset = offsets[offset_index]
+                element_result = []
+                for y in range(self.length_store[offset_index]):
+                    if indices[y] != 0:
+                        element = {'index':indices[y].item(),'logit':probabilities[y][indices[y]].item(),'range':offsets[offset_index][y]}
+                        element_result.append(element)
+                offset_index += 1
+                results.append(element_result)
+        mongo.put_result(results)
+        
 
         
 
