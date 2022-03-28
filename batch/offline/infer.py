@@ -20,12 +20,15 @@ def create_dataset(dataset, model_class:Base, options):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
     inference_config = model_class.inference_config
     tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
-    tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
-        max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
+    # TODO : Offset mapping only used for offset_mapping in NER
+    #tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+    #    max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True),batched=True)
 
+    tokenized_dataset = model_class.tokenize(tokenizer, dataset)
     columns = model_class.dataset_columns
     if 'label' in dataset.column_names:
         columns.append('label')
+        
     tokenized_dataset.set_format(type='torch', columns=columns)
 
     data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=False)
