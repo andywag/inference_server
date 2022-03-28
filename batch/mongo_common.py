@@ -5,6 +5,7 @@ from dacite import from_dict
 import time
 from bson.int64 import Int64
 import dataclasses
+from bson.objectid import ObjectId
 
 @dataclass
 class Result:
@@ -87,7 +88,7 @@ class MongoInterface:
 client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
 db = client.run_database
 infer = db.infer
-infer_results = db.infer_results
+infer_results = db.infer_result
 
 def get_infer_result(self, result_id):
     return infer.find_one({'_id':result_id})
@@ -96,19 +97,27 @@ def get_infer_results():
     cursor = infer.find({})
     documents = []
     for document in cursor:
+        document['sid'] = str(document['_id'])
         del document['_id']
+        #document[]
         documents.append(document)
     return documents
 
     
 
 def create_mongo_interface(model_description:T):
-    mongo = MongoInterface("infer")
+    mongo = MongoInterface("infer", "infer_result")
     result = ModelResult(model_description)
     result_dict = dataclasses.asdict(result)
     result_id = mongo.create_result(result_dict)
     mongo.update_status(result_id,"Submit")
     return mongo, result_id
 
-
+def get_final_results(id):
+    document = infer_results.find_one({'result_id':ObjectId(id)})
+    #print("Document", document)
+    if document is not None:
+        del document['_id']
+        del document['result_id']
+    return document
 

@@ -17,6 +17,7 @@ class InferConfig:
     dataset:str
     classifier:str
     num_labels:int
+    endpoint:str
 
     def create_model_description(self):
         infer_description = InferDescription()
@@ -26,6 +27,7 @@ class InferConfig:
         infer_description.dataset = self.dataset
         infer_description.classifier.classifier_type = self.classifier
         infer_description.classifier.num_labels = self.num_labels
+        infer_description.endpoint = self.endpoint
         
         return infer_description
 
@@ -34,7 +36,6 @@ class ModelResponse:
     request_id:str
 
 def run(model_input:InferConfig) -> ModelResponse:
-
     model_description = model_input.create_model_description()
     mongo, result_id = create_mongo_interface(model_description)
 
