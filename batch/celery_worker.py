@@ -31,6 +31,7 @@ def run_infer(self, model_description_dict:dict, result_id:str):
 
     # TODO : Make Generic Support for Model
     model_description = dacite.from_dict(data_class=InferDescription, data=model_description_dict)
+    #print("Here", model_description)
     result = main(model_description, mongo, self, logger)
     
     return result

@@ -8,13 +8,16 @@ from .offline_config import InferDescription
 import sys
 import logging
 logger = logging.getLogger()
+
 import traceback
 import numpy as np
 import time
 import torch
+from adlfs import AzureBlobFileSystem
 
 from .infer_classes import Base, Sequence, Token, MLM
-
+from datasets import load_from_disk
+import sys
 
 def create_dataset(dataset, model_class:Base, options):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
@@ -35,24 +38,37 @@ def create_dataset(dataset, model_class:Base, options):
 
     return data_loader
 
-def decode_dataset_tag(tag):
-    data_tag = tag.split(",")
+def decode_dataset_tag(tag, file_system):
+    
+    use_file_system = False
+    data_tag = tag.replace("cloud:","")
+    if len(data_tag) < len(tag):
+        use_file_system = True
 
     data_internal = data_tag[0].split(":")
-    if len(data_internal) == 1:
-        dataset = load_dataset(data_internal[0])
+    data_tag = data_tag.split(",")
+    
+    if use_file_system:
+        logger.info(f"Loading File {data_tag[0]}")
+        logger.info(f"{file_system.ls('')}")
+        dataset = load_from_disk(data_tag[0], fs = file_system)
     else:
-        dataset = load_dataset(data_internal[0], data_internal[1])
+        if len(data_internal) == 1:
+            dataset = load_dataset(data_internal[0])
+        else:
+            dataset = load_dataset(data_internal[0], data_internal[1])
+    
     for tag in data_tag[1:-1]:
         dataset = dataset[tag]
     
     if data_tag[-1] != 'text':
         dataset = dataset.map(lambda x:{'text':data_tag[-1]})
 
+    logger.info(f"Data Set Length {len(dataset)}")
     return dataset
 
-def create_data_loader(model_class:Base, options):
-    dataset = decode_dataset_tag(model_class.inference_config.dataset)
+def create_data_loader(model_class:Base, options, file_system):
+    dataset = decode_dataset_tag(model_class.inference_config.dataset, file_system)
     return create_dataset(dataset, model_class, options)
 
 
@@ -69,6 +85,16 @@ def update_status(mongo, t, m=None):
 
 def main(inference_config:InferDescription, mongo, celery, logger):
     
+    cloud_file_system = None
+    if inference_config.cloud is not None and inference_config.cloud != '' and inference_config.cloud != 'None':
+        if inference_config.cloud == 'AzureBlob':
+            logger.info(f"Creating Endpoint {inference_config.endpoint}")
+            cloud_file_system = AzureBlobFileSystem(connection_string=inference_config.endpoint)
+            logger.info(f"Cloud FS {cloud_file_system.ls('')}")
+            #sys.exit(0)
+    print("File System", cloud_file_system)
+
+
     if inference_config.classifier.classifier_type == 'Sequence':
         model_class = Sequence(inference_config)
     elif inference_config.classifier.classifier_type == 'Token':
@@ -83,7 +109,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     # Handle Data Loading
     update_status(mongo, "Data")
     try :    
-        data_loader = create_data_loader(model_class, options)
+        data_loader = create_data_loader(model_class, options, cloud_file_system)
     except Exception as e:
         update_status(mongo, "DataError",str(e))
         handle_error(f"Data Loading Error {str(e)}",e)
