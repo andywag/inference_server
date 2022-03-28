@@ -17,6 +17,7 @@ class InferConfig:
     dataset:str
     classifier:str
     num_labels:int
+    cloud:str
     endpoint:str
 
     def create_model_description(self):
@@ -27,6 +28,7 @@ class InferConfig:
         infer_description.dataset = self.dataset
         infer_description.classifier.classifier_type = self.classifier
         infer_description.classifier.num_labels = self.num_labels
+        infer_description.cloud = self.cloud
         infer_description.endpoint = self.endpoint
         
         return infer_description

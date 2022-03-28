@@ -23,6 +23,7 @@ class InferDescription:
     tokenizer:str='bert-base-uncased'
     model:str='bert-base-uncased'
     checkpoint:str='textattack/bert-base-uncased-imdb'
+    cloud:str=''
     endpoint:str = ''
 
     ipu:Ipu = Ipu()
