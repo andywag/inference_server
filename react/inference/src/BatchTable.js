@@ -11,12 +11,15 @@ import { DataGrid } from '@mui/x-data-grid';
 
 function BatchTable(props) {
   
+  const [results, setResults] = useState([]);
 
+
+  const requestOptions = {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' }
+  };
   const query = () => {
-    const requestOptions = {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    };
+    
     var time = new Date().getTime()
 
     fetch("http://192.168.3.114:8101/infer_results",requestOptions)
@@ -29,12 +32,26 @@ function BatchTable(props) {
           
           setResults(r)
           props.setResultMap(resultMap)
-          //props.setData(resultMap[selected].results)
         })
   }
 
-
-  const [results, setResults] = useState([]);
+  const queryResults = (selected) => {
+    
+    console.log("Query Results", selected);
+    const qu = 'http://192.168.3.114:8101/infer_final_result?id=' + selected
+    fetch(qu,requestOptions)
+      .then(response => response.json())
+      .then(r => {
+        //console.log(r)
+        if (r) {
+          props.setInferResults(r);
+        }
+        else {
+          props.setInferResults({});
+        }
+          
+        })
+  }
 
 
 
@@ -45,21 +62,6 @@ function BatchTable(props) {
 
 
 
-
-    const isSelected = (name) => {
-        return props.selected == name
-    };
-    
-    const handleClick = (evt, name) => {
-        props.setSelected(name);
-        //props.setData(resultMap[name].results)
-    }
-
-    const getDate = (row) => {
-      const date = new Date(row.status[row.status.length-1].time * 1000)
-      return moment(date).format('MM-DD-h:mm');
-    }
-
     const getHost = (row) => {
       const value = row
       if (value.hasOwnProperty('hostname')) {
@@ -68,10 +70,6 @@ function BatchTable(props) {
       return ""
     }
 
-    const handleContextMenu = () => {
-      console.log("Here")
-      
-    }
 
 
     const columns = [
@@ -85,13 +83,12 @@ function BatchTable(props) {
 
 
     const onSelection = (d,e) => {
-      //console.log("A",d, props.resultMap)
       if (d.length > 0) {
-        const selected = results[d[0]].uuid;
-        //console.log("Selected", selected)
-        props.setSelected(selected)
+        const selected = results[d[0]].sid;
+        props.setDescription(results[d[0]].description);
+        //props.setSelected(selected)
+        queryResults(selected);      
       }
-      
       
     }
 

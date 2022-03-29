@@ -17,7 +17,10 @@ const examples = [
     dataset:"imdb,train,text",
     tokenizer:"bert-base-uncased",
     classifier:"Sequence",
-    num_labels:2
+    num_labels:2, 
+    cloud:"None",
+    endpoint:"",
+    results:""
   },
   {
     name:"indonlu",
@@ -27,7 +30,10 @@ const examples = [
     dataset:"indonlu:smsa,train,text",
     tokenizer:"ayameRushia/indobert-base-uncased-finetuned-indonlu-smsa",
     classifier:"Sequence",
-    num_labels:3
+    num_labels:3,
+    cloud:"None",
+    endpoint:"",
+    results:""
   },
   {
     name:"ner",
@@ -37,17 +43,10 @@ const examples = [
     dataset:"wikitext:wikitext-103-v1,test,text",
     tokenizer:"bert-base-cased",
     classifier:"Token",
-    num_labels:9
-  },
-  {
-    name:"ner_accuracy",
-    model_type:"BERT",
-    model_size:"Base",
-    checkpoint:"dslim/bert-base-NER",
-    dataset:"conll2003,test,tokens",
-    tokenizer:"bert-base-cased",
-    classifier:"Token",
-    num_labels:9
+    num_labels:9,
+    cloud:"None",
+    endpoint:"",
+    results:""
   },
   {
     name:"mlm",
@@ -57,11 +56,27 @@ const examples = [
     dataset:"wikitext:wikitext-103-v1,test,text",
     tokenizer:"bert-base-uncased",
     classifier:"MLM",
-    num_labels:32
+    num_labels:32,
+    cloud:"None",
+    endpoint:"",
+    results:""
+  },
+  {
+    name:"mlm_cloud",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"bert-base-uncased",
+    dataset:"cloud:graphcore/masked_test,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"MLM",
+    num_labels:32,
+    cloud:"AzureBlob",
+    endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
+    results:""
   }
 ]
 
-const exampleNames = ['Imdb','Indonlu','NER','NER(Accuracy)','MLM']
+const exampleNames = ['Imdb','Indonlu','NER','MLM','MLM(Cloud)']
 
 function FineForm(props) {
   
@@ -76,6 +91,9 @@ function FineForm(props) {
     setDataset(examples[x].dataset);
     setClassifier(examples[x].classifier);
     setNumLabels(examples[x].num_labels);
+    setCloud(examples[x].cloud);
+    setEndPoint(examples[x].endpoint);
+    setResultsFolder(examples[x].results)
   }
 
 
@@ -86,6 +104,9 @@ function FineForm(props) {
   const [checkpoint, setCheckpoint] = useState("textattack/bert-base-uncased-imdb");
   const [dataset, setDataset] = useState("imdb,train,text");
   const [textName, setTextName] = useState("");
+  const [endpoint, setEndPoint] = useState("");
+  const [cloud, setCloud] = useState("None");
+  const [resultsFolder, setResultsFolder] = useState("");
 
 
   const [classifier, setClassifier] = useState("Sequence");
@@ -101,7 +122,10 @@ function FineForm(props) {
       dataset:dataset,
       tokenizer:tokenizer,
       classifier:classifier,
-      num_labels:numLabels
+      num_labels:numLabels,
+      cloud:cloud,
+      endpoint:endpoint,
+      result_folder:resultsFolder
 
     }
     
@@ -139,6 +163,14 @@ function FineForm(props) {
         <SimpleSelect label="Size" value={modelSize} set={setModelSize} options={["Base","Medium","Large"]} grid={3}/>
     </Grid>
     <Grid container padding={1}>
+        <SimpleSelect label="classifier" value={classifier} set={setClassifier} options={["Token","Sequence","MLM"]} grid={3}/>
+        <SimpleText label="numLabels" value={numLabels} set={setNumLabels} grid={3}/>
+    </Grid>
+    <Grid container padding={1}>
+      <SimpleSelect label="cloud" value={cloud} set={setCloud} options={["None","AzureBlob"]} grid={3}/>
+      <SimpleText label="cloud_endpont" value={endpoint} set={setEndPoint} grid={6}/>
+    </Grid>
+    <Grid container padding={1}>
       <SimpleText label="dataset" value={dataset} set={setDataset} grid={3}/>
       <SimpleText label="tokenizer" value={tokenizer} set={setTokenizer} grid={3}/>
     </Grid>
@@ -146,8 +178,7 @@ function FineForm(props) {
       <SimpleText label="checkpoint" value={checkpoint} set={setCheckpoint} grid={3}/>
     </Grid>
     <Grid container padding={1}>
-        <SimpleSelect label="classifier" value={classifier} set={setClassifier} options={["Token","Sequence","MLM"]} grid={3}/>
-        <SimpleText label="numLabels" value={numLabels} set={setNumLabels} grid={3}/>
+      <SimpleText label="results" value={resultsFolder} set={setResultsFolder} grid={3}/>
     </Grid>
     <Grid container padding={1}>
       <Grid item xs={2}>

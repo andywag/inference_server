@@ -11,15 +11,20 @@ function Batch(props) {
     
     //const [data, setData] = useState([]);
     const [resultMap, setResultMap] = useState({});
-    const [selected, setSelected] = useState("");
+    //const [selected, setSelected] = useState("");
+    const [inferResults, setInferResults] = useState([]);
+    const [description, setDescription] = useState({});
 
+    /*
     var data = [];
     var description;
     if (resultMap.hasOwnProperty(selected)) {
-        //console.log(resultMap[selected]);
+        console.log("Selected", selected)
+        console.log(resultMap[selected]);
         data = resultMap[selected].results;
         description = resultMap[selected].description;
     }
+    */
     
 
     return (
@@ -28,10 +33,16 @@ function Batch(props) {
                 <BatchForm/>
             </Grid>
             <Grid item xs={12}>
-                <BatchTable setResultMap={setResultMap} setSelected={setSelected}/>
+                <BatchTable setResultMap={setResultMap} setDescription={setDescription} setInferResults={setInferResults}/>
             </Grid>
-            <Grid item xs={6}>
-                <ReactJson collapsed="True" src={description}/>
+            <Grid item xs={3}>
+              <p><b>Configuration</b></p>
+               <ReactJson collapsed="True" src={description}/>
+            </Grid>
+
+            <Grid item xs={3}>
+                <p><b>Results</b></p>
+                <ReactJson collapsed="True" src={inferResults}/>
             </Grid>
        </Grid>
     )
