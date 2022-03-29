@@ -19,6 +19,7 @@ class InferConfig:
     num_labels:int
     cloud:str
     endpoint:str
+    result_folder:str
 
     def create_model_description(self):
         infer_description = InferDescription()
@@ -30,6 +31,10 @@ class InferConfig:
         infer_description.classifier.num_labels = self.num_labels
         infer_description.cloud = self.cloud
         infer_description.endpoint = self.endpoint
+        infer_description.result_folder = self.result_folder
+        if self.classifier == 'MLM':
+            infer_description.detail.batch_size = 8
+
         
         return infer_description
 
