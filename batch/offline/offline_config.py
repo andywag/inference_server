@@ -25,6 +25,7 @@ class InferDescription:
     checkpoint:str='textattack/bert-base-uncased-imdb'
     cloud:str=''
     endpoint:str = ''
+    result_folder:str=''
 
     ipu:Ipu = Ipu()
     detail:Detail=Detail()
