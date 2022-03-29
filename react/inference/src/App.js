@@ -4,7 +4,8 @@ import 'react-tabs/style/react-tabs.css';
 import Squad from './Squad.js'
 import Ner from './Ner.js'
 import GPT2 from './GPT2.js'
-import Main from './Main.js'
+import BatchDescription from './BatchDescription'
+import OnlineDescription from './OnlineDescription'
 import Bart from './Bart.js'
 import Batch from './Batch.js'
 import FineTop from './FineTop';
@@ -43,12 +44,12 @@ function App() {
             <Toolbar disableGutters>
               
               <Typography>Graphcore Inference API</Typography>
-              <Box sx={{ml:5}}><Typography><Link to="/">HOME</Link></Typography></Box>
+              
               <Box sx={{ml:5}}><Typography><Link to="/squad">SQUAD</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/ner">NER</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/gpt2">GPT2</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/bart">BART</Link></Typography></Box>
-              <Box sx={{ml:5}}><Typography><Link to="/batch">BATCH</Link></Typography></Box>
+              <Box sx={{ml:5}}><Typography><Link to="/batch">OFFLINE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/fine">FINE TUNING</Link></Typography></Box>
 
             </Toolbar>
@@ -57,7 +58,7 @@ function App() {
         </AppBar>
         <Box sx={{ml:5}}>
         <Routes>
-          <Route path="/" element={<Main/>}/>
+          <Route path="/" element={<OnlineDescription/>}/>
           <Route path="/squad" element={<Squad/>}/>
           <Route path="/ner" element={<Ner/>}/> 
           <Route path="/gpt2" element={<GPT2/>}/> 

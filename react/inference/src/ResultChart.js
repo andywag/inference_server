@@ -13,7 +13,7 @@ function ResultChart(props) {
                 <CartesianGrid stroke="#eee" strokeDasharray="5 5"/>
                 <Line type="monotone" dataKey="error" stroke="#8884d8" />
             </LineChart>
-            <ReactJson collapsed="True" src={props.description}/>
+            
         </Grid>
     );
 

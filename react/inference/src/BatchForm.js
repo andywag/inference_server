@@ -72,7 +72,7 @@ const examples = [
     num_labels:32,
     cloud:"AzureBlob",
     endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
-    results:""
+    results:"cloud:graphcore/mlm"
   }
 ]
 
