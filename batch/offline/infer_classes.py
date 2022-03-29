@@ -59,12 +59,15 @@ class Base:
     def post_process(self, mongo, cloud_file_system=None):
         pass
 
-    def output_results(self, mongo, total_results, cloud_file_system=None):
+    def output_results(self, mongo, total_results, fs=None):
         mongo.put_result(total_results)
 
-        if self.inference_config.result is not None and cloud_file_system is not None:
-            result_file = self.inference_config.result.replace("cloud:","")
-            with fs.open(result_file, 'wb') as fp:
+        logger.info(f"Writing Results {self.inference_config.result_folder}")
+
+        if self.inference_config.result_folder is not None and fs is not None:
+            logger.info("Writing Results")
+            result_file = self.inference_config.result_folder.replace("cloud:","")
+            with fs.open(result_file, 'w') as fp:
                 json.dump(total_results, fp)
 
 

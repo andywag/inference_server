@@ -22,7 +22,7 @@ class OptimizerDescription:
 @dataclass
 class ExecutionDescription:
     batch_size:int=4
-    batches_per_step:int=1
+    batches_per_step:int=16
     replication_factor:int=1
     gradient_accumulation:int=32
     random_seed:int=42

@@ -56,34 +56,61 @@ def main(top_description, result_id:str, celery, logger):
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)
     except Exception as e:
-        mongo.update_status(result_id,"Compile Error",str(e))
-        logger.info(f"Model Compilation Error {str(e)}")
+        mongo.update_status(result_id,"Model Error",str(e))
+        logger.info(f"Model Definition Error {str(e)}")
+        return 
+
+    iter_loader = iter(data_loader)
+
+    # Compile IPU Model
+    first_data = True
+    try :
+        data = next(iter_loader)
+        model_ipu.compile(data['input_ids'],
+            data['attention_mask'],
+            data['token_type_ids'],
+            data['label'])
+
+    except Exception as e:
+        mongo.update_status(result_id, "CompileError",str(e))
+        logger.info(f"Compilation Error {str(e)}")
         return 
 
     mongo.update_status(result_id,"Running")
 
-    iter_loader = iter(data_loader)
+    
+    start_time = time.time()
+
     results = []
     epoch = 0 
     step = 0
+    samples = 0
     while True:
-        try :
-            data = next(iter_loader)
-        except :
-            if model_description.execution_description.epochs is not None and epoch == model_description.execution_description.epochs:
-                break
-            iter_loader = iter(data_loader)
-            data = next(iter_loader)  
-            epoch += 1         
+        if not first_data:
+            try :
+                data = next(iter_loader)
+            except :
+                if model_description.execution_description.epochs is not None and epoch == model_description.execution_description.epochs-1:
+                    break
+                iter_loader = iter(data_loader)
+                data = next(iter_loader)  
+                epoch += 1
+        else:
+            first_data = False         
         
         tic = time.time()
         result = model_ipu(data['input_ids'],
             data['attention_mask'],
             data['token_type_ids'],
             data['label'])
+
+        #logger.info("A", model_description)
+        samples += model_description.execution_description.batch_size*model_description.execution_description.batches_per_step*model_description.execution_description.gradient_accumulation 
+        result_data = float(result[0][0].data)
+        mongo.update_accuracy(result_id, result_data, samples/(time.time()-start_time))
         delta = time.time() - tic
 
-        result_data = float(result[0][0].data)
+        
         result = {
             'epoch':epoch,
             'time': delta,
@@ -93,7 +120,7 @@ def main(top_description, result_id:str, celery, logger):
 
         mongo.update_result(result_id, result)
 
-        logger.info(f"{epoch} - {step} : {result_data}")
+        logger.info(f"{epoch} - {step} - {samples}: {result_data}")
         results.append(result_data)
         step += 1
         if model_description.execution_description.training_steps is not None and step == model_description.execution_description.training_steps:

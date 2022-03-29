@@ -12,6 +12,11 @@ class MongoInterface:
         self.db = self.client.run_database
         self.collection = self.db.fine_tuning
 
+    def update_accuracy(self, result_id, accuracy=0.0, qps=0.0):
+        self.collection.update_one({"_id":result_id},
+            {"$set":  {"loss":  accuracy, "qps":qps} } 
+        )
+
     def update_id(self, result_id, uuid):
         self.collection.update_one({"_id": result_id},
             {"$set":  {"uuid":  uuid} } 
