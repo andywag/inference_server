@@ -167,32 +167,49 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
         inputs = {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
+            "token_type_ids": token_type_ids
         }
 
         outputs = self.bert(**inputs)
         sequence_output, pooled_output = outputs[:2]
+        #sequence_output = outputs[0]
 
         # Select only the masked tokens for the classifier
         masked_output = self.gather_indices(sequence_output, masked_lm_positions)
         
-        prediction_scores, sequential_relationship_score = self.cls(masked_output, pooled_output)
-        outputs = (prediction_scores, sequential_relationship_score,) + outputs[2:]
+        prediction_scores, _ = self.cls(masked_output, pooled_output)
+        #prediction_scores = self.cls(masked_output)
+        scores = torch.topk(prediction_scores, 5, axis=-1)
+        return scores
+        #outputs = (prediction_scores, sequential_relationship_score,) + outputs[2:]
 
-        if masked_lm_labels is not None and next_sentence_label is not None:
-            masked_lm_loss = F.cross_entropy(
-                prediction_scores.view(-1, self.config.vocab_size),
-                masked_lm_labels.view(-1),
-                ignore_index=0).float()
-            next_sentence_loss = F.cross_entropy(sequential_relationship_score.view(-1, 2), next_sentence_label.view(-1)).float()
-            total_loss = poptorch.identity_loss(masked_lm_loss + next_sentence_loss, reduction="none")
+        #if masked_lm_labels is not None and next_sentence_label is not None:
+        #    masked_lm_loss = F.cross_entropy(
+        #        prediction_scores.view(-1, self.config.vocab_size),
+        #        masked_lm_labels.view(-1),
+        #        ignore_index=0).float()
+        #    next_sentence_loss = F.cross_entropy(sequential_relationship_score.view(-1, 2), next_sentence_label.view(-1)).float()
+        #    total_loss = poptorch.identity_loss(masked_lm_loss + next_sentence_loss, reduction="none")
 
-            next_sentence_acc = accuracy(sequential_relationship_score.view([-1, 2]), next_sentence_label.view(-1))
+        #    next_sentence_acc = accuracy(sequential_relationship_score.view([-1, 2]), next_sentence_label.view(-1))
             # masked_lm_labels: 0 if corresponding token not masked, original value otherwise
-            masked_lm_acc = accuracy_masked(prediction_scores.view([-1, self.config.mask_tokens, self.config.vocab_size]), masked_lm_labels, 0)
-            outputs = (total_loss, masked_lm_loss, next_sentence_loss, masked_lm_acc, next_sentence_acc)
+        #    masked_lm_acc = accuracy_masked(prediction_scores.view([-1, self.config.mask_tokens, self.config.vocab_size]), masked_lm_labels, 0)
+        #    outputs = (total_loss, masked_lm_loss, next_sentence_loss, masked_lm_acc, next_sentence_acc)
+        #return outputs
+    @classmethod
+    def from_pretrained(cls, *args, **kwargs):
+        # Prevent word_embedding serialization when loading from pretrained so weights are loaded
+        embedding_serialization = 1
+        if kwargs.get("config"):
+            embedding_serialization = kwargs["config"].embedding_serialization_factor
+            kwargs["config"].embedding_serialization_factor = 1
+        model = super().from_pretrained(*args, **kwargs)
 
-        return outputs
+        # Apply serialization afterwards
+        if embedding_serialization > 1:
+            model.bert.embeddings.word_embeddings = SerializedEmbedding(model.bert.embeddings.word_embeddings,
+                                                                        embedding_serialization)
+        return model
 
 
 class SerializedEmbedding(nn.Module):

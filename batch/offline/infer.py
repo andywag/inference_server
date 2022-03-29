@@ -44,15 +44,16 @@ def decode_dataset_tag(tag, file_system):
     data_tag = tag.replace("cloud:","")
     if len(data_tag) < len(tag):
         use_file_system = True
-
-    data_internal = data_tag[0].split(":")
-    data_tag = data_tag.split(",")
     
+    data_tag = data_tag.split(",")
     if use_file_system:
         logger.info(f"Loading File {data_tag[0]}")
         logger.info(f"{file_system.ls('')}")
         dataset = load_from_disk(data_tag[0], fs = file_system)
     else:
+        
+        data_internal = data_tag[0].split(":")
+        logger.info(f"Data Internal {data_internal}")
         if len(data_internal) == 1:
             dataset = load_dataset(data_internal[0])
         else:
@@ -91,8 +92,12 @@ def main(inference_config:InferDescription, mongo, celery, logger):
             logger.info(f"Creating Endpoint {inference_config.endpoint}")
             cloud_file_system = AzureBlobFileSystem(connection_string=inference_config.endpoint)
             logger.info(f"Cloud FS {cloud_file_system.ls('')}")
-            #sys.exit(0)
+            
     print("File System", cloud_file_system)
+
+    #result = None
+    #if inference_config.result is not None:
+    #    result = 
 
 
     if inference_config.classifier.classifier_type == 'Sequence':

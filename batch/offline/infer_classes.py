@@ -29,6 +29,7 @@ class Base:
         self.label_store = []
 
     def tokenize(self, tokenizer, dataset):
+        self.tokenizer = tokenizer
         tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
             max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
         return tokenized_dataset
@@ -55,8 +56,16 @@ class Base:
           
         return None
 
-    def post_process(self, mongo):
+    def post_process(self, mongo, cloud_file_system=None):
         pass
+
+    def output_results(self, mongo, total_results, cloud_file_system=None):
+        mongo.put_result(total_results)
+
+        if self.inference_config.result is not None and cloud_file_system is not None:
+            result_file = self.inference_config.result.replace("cloud:","")
+            with fs.open(result_file, 'wb') as fp:
+                json.dump(total_results, fp)
 
 
 class Sequence(Base):
@@ -77,7 +86,7 @@ class Sequence(Base):
         else:
             return None
 
-    def post_process(self, mongo):
+    def post_process(self, mongo, cloud_file_system=None):
         results = []
         import pickle
         count = 0
@@ -88,7 +97,7 @@ class Sequence(Base):
                 index = result[1][y].item()
                 results.append({'class':index,'probability':result[0][y][index].item()})
         
-        mongo.put_result(results)
+        self.output_results(mongo, results, cloud_file_system)
         
         
             
@@ -113,7 +122,7 @@ class Token(Base):
         
         return None
 
-    def post_process(self, mongo):
+    def post_process(self, mongo, cloud_file_system=None):
         data = self.result_store
         offsets = self.offset_store
         offset_index = 0
@@ -130,7 +139,7 @@ class Token(Base):
                         element_result.append(element)
                 offset_index += 1
                 results.append(element_result)
-        mongo.put_result(results)
+        self.output_results(mongo, results, cloud_file_system)
         
 
         
@@ -139,6 +148,7 @@ class MLM(Base):
     def __init__(self, inference_config):
         super().__init__(inference_config)
         self.model = PipelinedBertForPretraining
+        self.masked_store = []
 
     def create_config(self):
         config = super().create_config()
@@ -159,5 +169,52 @@ class MLM(Base):
 
     def model_inputs(self, data):
         m_inputs = super().model_inputs(data)
-        m_inputs.append(self.position_mask)
+        
+        position_values = (data['input_ids'] == 103)
+        positions = position_values.nonzero()
+
+        masked_lm_positions=torch.zeros(size=(len(data['input_ids']),self.inference_config.classifier.num_labels),dtype=torch.int)
+        self.masked_store.append(masked_lm_positions)
+
+        row_index = [0]*len(data['input_ids'])
+        for x in range(len(positions)):
+            row = positions[x][0]
+            col = row_index[row]
+            row_index[row] += 1
+            value = positions[x][1]
+            if row_index[row] < 32:
+                masked_lm_positions[row][col] = value
+
+        m_inputs.append(masked_lm_positions)
         return m_inputs
+
+    def handle_result(self, result, data):
+        self.result_store.append((result))
+        if 'label' in data:
+            self.label_store.append(data['label'])
+        
+        return None
+
+    def post_process(self, mongo, cloud_file_system=None):
+        data = self.result_store
+
+        index = 0
+        total_results = []
+        for x in range(len(data[0])): # Batch Index
+            for y in range(len(data[x][0][2])): # Item Index
+                sequence_result = []
+                for z in range(len(data[x][0][y])): # 
+                    if self.masked_store[x][y][z] != 0:
+                        tokens = self.tokenizer.convert_ids_to_tokens(data[x][1][y][z])
+                        logits = [float(x) for x in data[x][0][y][z].numpy()]
+                        result = {'index':self.masked_store[x][y][z].item(),'tokens':tokens, 'logits':logits}
+                        sequence_result.append(result)
+                total_results.append(sequence_result)
+
+        self.output_results(mongo, total_results, cloud_file_system)
+
+
+        #masked_lm_positions = self.masked_lm_positions
+        #with open('save.pik','wb') as fp:
+        #    pickle.dump({'data':data,'masked_lm_positions':self.masked_store},fp)
+
