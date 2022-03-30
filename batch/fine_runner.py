@@ -24,6 +24,9 @@ class ModelConfig:
     epochs:int
     classifier:str
     num_labels:int
+    cloud:str
+    endpoint:str
+    result_folder:str
 
     def create_model_description(self, model_description=ModelDescription()):
         model_description.name = self.name
@@ -32,6 +35,11 @@ class ModelConfig:
         model_description.execution_description.epochs = self.epochs
         model_description.execution_description.learning_rate = self.learning_rate
         model_description.dataset.name = self.dataset
+        model_description.cloud = self.cloud
+        model_description.endpoint = self.endpoint
+        model_description.result_folder = self.result_folder
+        
+
         return model_description
 
 @dataclass

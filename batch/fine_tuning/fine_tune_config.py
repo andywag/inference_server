@@ -61,6 +61,9 @@ class ModelDescription:
     name:str="bert"
     tokenizer:str="bert-base-uncased"
     checkpoint:str="bert-base-uncased"
+    cloud:str=""
+    endpoint:str=""
+    result_folder:str=""
     ipu_options:IpuOptions=IpuOptions()
     optimizer_description:OptimizerDescription=OptimizerDescription()
     execution_description:ExecutionDescription=ExecutionDescription()

@@ -42,7 +42,6 @@ def get_results():
 @app.post("/infer")
 def run_tune(model_input:InferConfig) :
     return offline_runner.run(model_input)
-    # Create the Model
     
 @app.get("/infer_final_result")
 def get_fin_results(id):
