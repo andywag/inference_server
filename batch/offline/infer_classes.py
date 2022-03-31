@@ -64,12 +64,8 @@ class Base:
 
         logger.info(f"Writing Results {self.inference_config.result_folder}")
 
-        if self.inference_config.result_folder is not None and fs is not None:
-            logger.info("Writing Results")
-            result_file = self.inference_config.result_folder.replace("cloud:","")
-            with fs.open(result_file, 'w') as fp:
-                json.dump(total_results, fp)
-
+        if self.inference_config.result_folder is not None and inference_config.result_folder != "":
+            file_system.output_results(self.inference_config.result_folder, total_results)
 
 class Sequence(Base):
     def __init__(self, inference_config):
