@@ -1,6 +1,7 @@
 
 from adlfs import AzureBlobFileSystem
-from datasets import load_from_disk
+from datasets import load_from_disk, load_dataset
+import json
 
 class CloudFileContainer:
     
@@ -17,14 +18,17 @@ class CloudFileContainer:
 
     def load_dataset(self, data_tag):
 
+        dataset = None
+        print("B", data_tag)
+        data_tag = data_tag.split(",")
         try:
             if self.cloud_file_system is not None:
-                data_tag = data_tag.split(",")
                 dataset = load_from_disk(data_tag[0], fs = self.cloud_file_system)
         except Exception as e:
             print("Error", e)
 
         if dataset is None:
+            print("DataTag", data_tag[0])
             data_internal = data_tag[0].split(":")
             if len(data_internal) == 1:
                 dataset = load_dataset(data_internal[0])
@@ -39,7 +43,7 @@ class CloudFileContainer:
         
         return dataset
 
-    def output_file(self, result_file, results):
+    def output_results(self, result_file, results):
         if self.cloud_file_system is not None:
             with self.cloud_file_system.open(result_file, 'w') as fp:
                 json.dump(results, fp)

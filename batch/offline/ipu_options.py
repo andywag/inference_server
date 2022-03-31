@@ -21,11 +21,10 @@ import numpy as np
 import ctypes
 import os
 
-from .offline_config import Ipu
 
 
 
-def get_options(options:Ipu):
+def get_options(options):
 
     opts = poptorch.Options()
     opts._Popart.set("subgraphCopyingStrategy", int(popart.SubgraphCopyingStrategy.JustInTime))

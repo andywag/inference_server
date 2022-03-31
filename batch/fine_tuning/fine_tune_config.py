@@ -4,6 +4,10 @@ from typing import List, Optional
 import dataclasses
 from datetime import datetime
 
+import sys
+sys.path.append("..")
+from common_description import Description
+
 @unique            
 class OptimizerEnum(str, Enum):
     ADAM = "Adam"
@@ -57,19 +61,12 @@ class ModelDataset:
 
 
 @dataclass
-class ModelDescription:
-    name:str="bert"
-    tokenizer:str="bert-base-uncased"
-    checkpoint:str="bert-base-uncased"
-    cloud:str=""
-    endpoint:str=""
-    result_folder:str=""
+class ModelDescription(Description):
     ipu_options:IpuOptions=IpuOptions()
     optimizer_description:OptimizerDescription=OptimizerDescription()
     execution_description:ExecutionDescription=ExecutionDescription()
     ipu_layout:IpuLayout=IpuLayout()
     dataset:ModelDataset=ModelDataset()
-    #model_specific:ModelSpecific=ModelSpecific('test')
 
 
 @dataclass
