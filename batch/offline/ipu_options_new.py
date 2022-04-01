@@ -23,12 +23,12 @@ import os
 
 
 def constant_options(opts):
-    #opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
-    #opts.Precision.enableStochasticRounding(True)
-    #opts.autoRoundNumIPUs(True)
-    #opts.anchorMode(poptorch.AnchorMode.Sum)
+    opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
+    opts.Precision.enableStochasticRounding(True)
+    opts.autoRoundNumIPUs(True)
+    opts.anchorMode(poptorch.AnchorMode.Sum)
         # PopART options
-    #opts._Popart.set("disableGradAccumulationTensorStreams", True)
+    opts._Popart.set("disableGradAccumulationTensorStreams", True)
     opts._Popart.set("subgraphCopyingStrategy", int(popart.SubgraphCopyingStrategy.JustInTime))
     opts._Popart.set("outlineThreshold", 10.0)
     opts._Popart.set("accumulateOuterFragmentSettings.schedule",
@@ -42,7 +42,6 @@ def constant_options(opts):
     }
 
     opts._Popart.set("engineOptions", engine_options)
-
 
 def training_options(opts, model_description):
     opts.randomSeed(model_description.execution_description.random_seed)
@@ -64,20 +63,19 @@ def training_options(opts, model_description):
     }
     opts.setAvailableMemoryProportion(mem_prop)
 
+
 def get_options(options):
 
     opts = poptorch.Options()
     constant_options(opts)
-    if options.training:
-        training_options(opts, options)
-
     
     opts.deviceIterations(options.batches_per_step)
-
     # Precision options
     if options.enable_half_partials:
         opts.Precision.setPartialsType(torch.float16)
 
+    if options.training:
+        training_options(opts,options)
 
 
     return opts

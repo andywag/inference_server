@@ -19,6 +19,8 @@ from .infer_classes import Base, Sequence, Token, MLM
 from datasets import load_from_disk
 import sys
 
+from cloud_utils import CloudFileContainer
+
 def create_dataset(dataset, model_class:Base, options):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
     inference_config = model_class.inference_config
@@ -38,8 +40,10 @@ def create_dataset(dataset, model_class:Base, options):
 
     return data_loader
 
-def decode_dataset_tag(tag, file_system):
+def decode_dataset_tag(tag, cloud_file_system):
     
+    return cloud_file_system.load_dataset(tag)
+
     use_file_system = False
     data_tag = tag.replace("cloud:","")
     if len(data_tag) < len(tag):
@@ -68,8 +72,8 @@ def decode_dataset_tag(tag, file_system):
     logger.info(f"Data Set Length {len(dataset)}")
     return dataset
 
-def create_data_loader(model_class:Base, options, file_system):
-    dataset = decode_dataset_tag(model_class.inference_config.dataset, file_system)
+def create_data_loader(model_class:Base, options, cloud_file_system):
+    dataset = decode_dataset_tag(model_class.inference_config.dataset, cloud_file_system)
     return create_dataset(dataset, model_class, options)
 
 
@@ -86,20 +90,10 @@ def update_status(mongo, t, m=None):
 
 def main(inference_config:InferDescription, mongo, celery, logger):
     
-    cloud_file_system = None
-    if inference_config.cloud is not None and inference_config.cloud != '' and inference_config.cloud != 'None':
-        if inference_config.cloud == 'AzureBlob':
-            logger.info(f"Creating Endpoint {inference_config.endpoint}")
-            cloud_file_system = AzureBlobFileSystem(connection_string=inference_config.endpoint)
-            logger.info(f"Cloud FS {cloud_file_system.ls('')}")
-            
+    cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)
     print("File System", cloud_file_system)
 
-    #result = None
-    #if inference_config.result is not None:
-    #    result = 
-
-
+   
     if inference_config.classifier.classifier_type == 'Sequence':
         model_class = Sequence(inference_config)
     elif inference_config.classifier.classifier_type == 'Token':
@@ -163,6 +157,10 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
         try :
             result = model_ipu(*model_class.model_inputs(data))
+            logger.info(f"{len(result)}")
+            logger.info(f"{result[0].shape}")
+            logger.info(f"{result[1].shape}")
+
         except Exception as e:
             update_status(mongo, "RunError",str(e))
             handle_error("Run Error", e)

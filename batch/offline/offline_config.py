@@ -5,6 +5,7 @@ class Ipu:
     batches_per_step:int=64
     embedding_serialization_factor:int=1
     enable_half_partials:bool=True
+    training:bool=False
 
 @dataclass 
 class Detail:
