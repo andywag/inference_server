@@ -1,33 +1,40 @@
 
+if [[ -z "${INFERENCE_BUILD}" ]]; then
+    echo "Need to set INFERENCE_BUILD environment variable"
+    #exit 1
+fi
 pushd $INFERENCE_BUILD
 mkdir triton
+pushd triton
 
-pip3 install --verbose --force --upgrade cmake
+#pip3 install --verbose --force --upgrade cmake
 # Hack to put cmake to the correct version
-alias cmake=/localdata/andyw/projects/venv/bin/cmake
+#alias cmake=/localdata/andyw/projects/venv/bin/cmake
 sudo apt-get install libre2-dev
 sudo apt-get install -y rapidjson-dev
-sudo apt-getinstall libarchive-dev
+sudo apt-get install libarchive-dev
 sudo apt-get install libssl-dev
 sudo apt-get install build-essential libboost-system-dev libboost-thread-dev libboost-program-options-dev libboost-test-dev
 sudo apt-get install libnuma-dev
 
-cd triton
-git clone --recurse-submodules https://github.com/mlcommons/inference.git mlperf_inference
-pushd mlperf_inference/loadgen
-CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel
-pip install --force-reinstall dist/*.whl
-popd
+#cd triton
+#git clone --recurse-submodules https://github.com/mlcommons/inference.git mlperf_inference
+#pushd mlperf_inference/loadgen
+#CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel
+#pip install --force-reinstall dist/*.whl
+#popd
 
 
-git clone https://github.com/triton-inference-server/server.git
+git clone https://github.com/triton-inference-server/server.git 
 pushd server
+git checkout ae910e51b67e50b90948159e540b0e2251bf744b
 python3 build.py --build-dir mybuild --no-container-build --endpoint=grpc --enable-logging --enable-stats --cmake-dir `pwd`/build
-cp -r ./mybuild/tritonserver/build/server/mybuild/tritonserver/install .
+cp -r ./mybuild/tritonserver/build/server/mybuild/tritonserver/install/ .
 popd
 
 git clone https://github.com/triton-inference-server/python_backend.git
 cd python_backend
+git checkout 17ecaf6a262b90fe059afff8d67469823e1d3682
 mkdir build
 cd build
 cmake -DTRITON_ENABLE_GPU=OFF -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/install ..

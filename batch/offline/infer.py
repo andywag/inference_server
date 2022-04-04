@@ -65,19 +65,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)
     print("File System", cloud_file_system)
 
-    #cloud_file_system = None
-    #if inference_config.cloud is not None and inference_config.cloud != '' and inference_config.cloud != 'None':
-    #    if inference_config.cloud == 'AzureBlob':
-    #        logger.info(f"Creating Endpoint {inference_config.endpoint}")
-    #        cloud_file_system = AzureBlobFileSystem(connection_string=inference_config.endpoint)
-    #        logger.info(f"Cloud FS {cloud_file_system.ls('')}")
-            
-
-    #result = None
-    #if inference_config.result is not None:
-    #    result = 
-
-
+   
     if inference_config.classifier.classifier_type == 'Sequence':
         model_class = Sequence(inference_config)
     elif inference_config.classifier.classifier_type == 'Token':
@@ -141,6 +129,10 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
         try :
             result = model_ipu(*model_class.model_inputs(data))
+            logger.info(f"{len(result)}")
+            logger.info(f"{result[0].shape}")
+            logger.info(f"{result[1].shape}")
+
         except Exception as e:
             update_status(mongo, "RunError",str(e))
             handle_error("Run Error", e)

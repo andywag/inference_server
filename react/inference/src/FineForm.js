@@ -84,7 +84,10 @@ function FineForm(props) {
       learning_rate:learningRate,
       epochs:epochs,
       classifier:classifier,
-      num_labels:numLabels
+      num_labels:numLabels,
+      cloud:cloud,
+      endpoint:endpoint,
+      result_folder:resultsFolder
 
     }
     

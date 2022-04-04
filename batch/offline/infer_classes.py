@@ -64,8 +64,8 @@ class Base:
 
         logger.info(f"Writing Results {self.inference_config.result_folder}")
 
-        if self.inference_config.result_folder is not None and inference_config.result_folder != "":
-            file_system.output_results(self.inference_config.result_folder, total_results)
+        if self.inference_config.result_folder is not None and self.inference_config.result_folder != "":
+            fs.output_results(self.inference_config.result_folder, total_results)
 
 class Sequence(Base):
     def __init__(self, inference_config):

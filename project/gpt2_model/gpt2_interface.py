@@ -28,7 +28,6 @@ from transformers import (GPT2Config,GPT2LMHeadModel, GPT2Model)
 #from utils import _get_layer_ipu, str_to_bool
 from transformers import GPT2Tokenizer, GPT2TokenizerFast
 import poptorch
-from model.optimized_gpt2_attn import OptimizedGPT2Attention_test, OptimizedGPT2Attention_nobuffer
 
 
 MODEL_CONFIG = {'gpt2': 'config/config.json', 'gpt2-medium': 'config/config_medium.json',
@@ -74,6 +73,8 @@ class GTP2Wrapper(torch.nn.Module):
             self.sharding_mapping()
 
     def optimize(self):
+        from model.optimized_gpt2_attn import OptimizedGPT2Attention_test, OptimizedGPT2Attention_nobuffer
+
         self.model.config.batch = self.args.batch_size
         self.model.config.seq = self.args.input_len + self.args.output_len
         self.model.config.input_len = self.args.input_len
@@ -85,6 +86,7 @@ class GTP2Wrapper(torch.nn.Module):
               GPT2Attn = OptimizedGPT2Attention_test(self.model.config)
             GPT2Attn.load_state_dict(layer.attn.state_dict(), strict=False)
             layer.attn = GPT2Attn
+            # FIXME : Not sure why this is disable
             #layer.mlp.act = nn.functional.gelu
 
     def forward(self, context, dynamic_mask, position_ids):
