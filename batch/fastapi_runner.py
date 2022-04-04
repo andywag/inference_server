@@ -32,7 +32,7 @@ def get_results():
 
 @app.post("/tune")
 def run_tune(model_input:ModelConfig) -> ModelResponse:
-    return fine_runner.run(model_input)
+    return offline_runner.run(model_input, True)
    
 
 @app.get("/infer_results")

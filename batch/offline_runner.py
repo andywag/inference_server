@@ -21,9 +21,9 @@ class InferConfig:
     endpoint:str
     result_folder:str
     # Training Only
-    optimizer:str
-    learning_rate:float
-    epochs:int
+    optimizer:str=""
+    learning_rate:float=0.0001
+    epochs:int=1
 
     def create_model_description(self):
         infer_description = InferDescription()
@@ -39,6 +39,9 @@ class InferConfig:
         if self.classifier == 'MLM':
             infer_description.detail.batch_size = 8
 
+        # Training Only
+        infer_description.optimizer.epochs = self.epochs
+        infer_description.optimizer.learning_rate = self.learning_rate
         
         return infer_description
 
@@ -46,8 +49,12 @@ class InferConfig:
 class ModelResponse:
     request_id:str
 
-def run(model_input:InferConfig) -> ModelResponse:
+
+
+def run(model_input:InferConfig, train:bool=False) -> ModelResponse:
     model_description = model_input.create_model_description()
+    if train:
+        model_description.train = True
     mongo, result_id = create_mongo_interface(model_description)
 
     model_description_dict = dataclasses.asdict(model_description)
@@ -55,10 +62,6 @@ def run(model_input:InferConfig) -> ModelResponse:
     # Attach the ID to the Database
     mongo.update_id(str(uuid))
     mongo.update_status("Submitted")
-    print("Running Inference", result_id)
+    print("Running Inference", result_id, train)
     return ModelResponse(str(result_id))
 
-#def get_results():
-#    mongo = MongoInterface()
-#    results = mongo.get_all_results()
-#    return results
