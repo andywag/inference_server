@@ -27,12 +27,14 @@ sudo apt-get install libnuma-dev
 
 git clone https://github.com/triton-inference-server/server.git 
 pushd server
-python3 build.py --build-dir mybuild --no-container-build --endpoint=grpc --enable-logging --enable-stats --install-dir install
-cp -r ./mybuild/tritonserver/build/triton-server/mybuild/tritonserver/install/ .
+git checkout ae910e51b67e50b90948159e540b0e2251bf744b
+python3 build.py --build-dir mybuild --no-container-build --endpoint=grpc --enable-logging --enable-stats --cmake-dir `pwd`/build
+cp -r ./mybuild/tritonserver/build/server/mybuild/tritonserver/install/ .
 popd
 
 git clone https://github.com/triton-inference-server/python_backend.git
 cd python_backend
+git checkout 17ecaf6a262b90fe059afff8d67469823e1d3682
 mkdir build
 cd build
 cmake -DTRITON_ENABLE_GPU=OFF -DCMAKE_INSTALL_PREFIX:PATH=`pwd`/install ..

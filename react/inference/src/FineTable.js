@@ -31,7 +31,7 @@ function FineTable(props) {
           });
           
           setResults(r)
-          props.setResultMap(resultMap)
+          //props.setResultMap(resultMap)
         })
   }
 
