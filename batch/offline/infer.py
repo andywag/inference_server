@@ -41,36 +41,8 @@ def create_dataset(dataset, model_class:Base, options):
     return data_loader
 
 def decode_dataset_tag(tag, cloud_file_system):
-    
     return cloud_file_system.load_dataset(tag)
 
-    use_file_system = False
-    data_tag = tag.replace("cloud:","")
-    if len(data_tag) < len(tag):
-        use_file_system = True
-    
-    data_tag = data_tag.split(",")
-    if use_file_system:
-        logger.info(f"Loading File {data_tag[0]}")
-        logger.info(f"{file_system.ls('')}")
-        dataset = load_from_disk(data_tag[0], fs = file_system)
-    else:
-        
-        data_internal = data_tag[0].split(":")
-        logger.info(f"Data Internal {data_internal}")
-        if len(data_internal) == 1:
-            dataset = load_dataset(data_internal[0])
-        else:
-            dataset = load_dataset(data_internal[0], data_internal[1])
-    
-    for tag in data_tag[1:-1]:
-        dataset = dataset[tag]
-    
-    if data_tag[-1] != 'text':
-        dataset = dataset.map(lambda x:{'text':data_tag[-1]})
-
-    logger.info(f"Data Set Length {len(dataset)}")
-    return dataset
 
 def create_data_loader(model_class:Base, options, cloud_file_system):
     dataset = decode_dataset_tag(model_class.inference_config.dataset, cloud_file_system)

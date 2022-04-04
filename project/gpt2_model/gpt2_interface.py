@@ -85,7 +85,7 @@ class GTP2Wrapper(torch.nn.Module):
               GPT2Attn = OptimizedGPT2Attention_test(self.model.config)
             GPT2Attn.load_state_dict(layer.attn.state_dict(), strict=False)
             layer.attn = GPT2Attn
-            layer.mlp.act = nn.functional.gelu
+            #layer.mlp.act = nn.functional.gelu
 
     def forward(self, context, dynamic_mask, position_ids):
 

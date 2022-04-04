@@ -20,6 +20,10 @@ class InferConfig:
     cloud:str
     endpoint:str
     result_folder:str
+    # Training Only
+    optimizer:str
+    learning_rate:float
+    epochs:int
 
     def create_model_description(self):
         infer_description = InferDescription()
