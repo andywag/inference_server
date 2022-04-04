@@ -23,12 +23,7 @@ import os
 
 
 def constant_options(opts):
-    #opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
-    #opts.Precision.enableStochasticRounding(True)
-    #opts.autoRoundNumIPUs(True)
-    #opts.anchorMode(poptorch.AnchorMode.Sum)
-        # PopART options
-    #opts._Popart.set("disableGradAccumulationTensorStreams", True)
+    
     opts._Popart.set("subgraphCopyingStrategy", int(popart.SubgraphCopyingStrategy.JustInTime))
     opts._Popart.set("outlineThreshold", 10.0)
     opts._Popart.set("accumulateOuterFragmentSettings.schedule",
@@ -44,23 +39,30 @@ def constant_options(opts):
     opts._Popart.set("engineOptions", engine_options)
 
 
-def training_options(opts, model_description):
-    opts.randomSeed(model_description.execution_description.random_seed)
+def training_options(opts, ipu_options):
+    opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
+    opts.Precision.enableStochasticRounding(True)
+    opts.autoRoundNumIPUs(True)
+    opts.anchorMode(poptorch.AnchorMode.Sum)
+    # PopART options
+    opts._Popart.set("disableGradAccumulationTensorStreams", True)
 
-    opts.deviceIterations(model_description.execution_description.batches_per_step)
-    opts.Training.gradientAccumulation(model_description.execution_description.gradient_accumulation)
+
+    opts.randomSeed(ipu_options.random_seed)
+
+    opts.Training.gradientAccumulation(ipu_options.gradient_accumulation)
     opts.Training.accumulationAndReplicationReductionType(poptorch.ReductionType.Mean)
-    opts.Training.setAutomaticLossScaling(model_description.ipu_options.auto_loss_scaling)
+    opts.Training.setAutomaticLossScaling(ipu_options.auto_loss_scaling)
 
     opts.TensorLocations.setOptimizerLocation(
         poptorch.TensorLocationSettings()
-        .useOnChipStorage(not model_description.ipu_options.optimizer_state_offchip)
-        .useReplicatedTensorSharding(model_description.ipu_options.replicated_tensor_sharding)
+        .useOnChipStorage(not ipu_options.optimizer_state_offchip)
+        .useReplicatedTensorSharding(ipu_options.replicated_tensor_sharding)
     )
 
     mem_prop = {
-        f'IPU{i}': model_description.ipu_layout.matmul_proportion[i]
-        for i in range(int(model_description.ipu_layout.ipus_per_replica))
+        f'IPU{i}': ipu_options.matmul_proportion[i]
+        for i in range(int(ipu_options.ipus_per_replica))
     }
     opts.setAvailableMemoryProportion(mem_prop)
 
@@ -73,7 +75,6 @@ def get_options(options):
 
     
     opts.deviceIterations(options.batches_per_step)
-
     # Precision options
     if options.enable_half_partials:
         opts.Precision.setPartialsType(torch.float16)

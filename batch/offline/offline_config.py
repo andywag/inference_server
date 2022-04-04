@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import List
 
 @dataclass 
 class Ipu:
@@ -6,6 +7,16 @@ class Ipu:
     embedding_serialization_factor:int=1
     enable_half_partials:bool=True
     training:bool=False
+    auto_loss_scaling:bool=False
+    optimizer_state_offchip:bool=False
+    replicated_tensor_sharding:bool=True
+    enable_half_partials:bool=True
+    use_popdist:bool=False
+    recompute_checkpoint_every_layer:bool = True
+    ipus_per_replica:int=4
+    layers_per_ipu:List[float]=field(default_factory=lambda: [0, 4, 4, 4])
+    matmul_proportion:List[float]=field(default_factory=lambda: [0.25,0.25,0.25,0.25])
+
 
 @dataclass 
 class Detail:
