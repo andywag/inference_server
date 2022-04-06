@@ -1,7 +1,7 @@
     
 import pymongo
 from dacite import from_dict
-from .fine_tune_config import ModelResult, StatusLog
+from fine_tune_config import ModelResult, StatusLog
 import time
 from bson.int64 import Int64
 

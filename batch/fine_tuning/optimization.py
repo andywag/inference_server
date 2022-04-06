@@ -17,7 +17,7 @@ from transformers import get_constant_schedule
 from poptorch.optim import AdamW, LAMB
 from torch import float16, float32
 import horovod.torch as hvd
-from .fine_tune_config import ModelDescription, OptimizerEnum
+from fine_tune_config import ModelDescription, OptimizerEnum
 
 
 def get_lr_scheduler(optimizer,

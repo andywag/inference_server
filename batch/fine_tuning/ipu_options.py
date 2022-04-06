@@ -21,7 +21,7 @@ import numpy as np
 import ctypes
 import os
 
-from .fine_tune_config import ModelDescription
+from fine_tune_config import ModelDescription
 
 def constant_options(opts):
     opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))

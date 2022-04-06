@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 from enum import Enum, unique
-from ..fine_tune_config import ModelDescription
+from fine_tune_config import ModelDescription
 from .modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification
 import ctypes
 import os
@@ -10,7 +10,7 @@ import os
 
         
 
-def handle_custom_ops(config, logger, mongo, result_id):
+def handle_custom_ops(config, logger):
     file_dir = os.path.dirname(os.path.realpath(__file__))
     CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
     if os.path.exists(CUSTOM_OP_PATH):
@@ -20,7 +20,6 @@ def handle_custom_ops(config, logger, mongo, result_id):
         ops_and_patterns.setHiddenSize(config.hidden_size)
     else:
         logger.error("Couldn't Load Custom Ops")
-        mongo.update_status(result_id,"Compiling")
         exit()
 
 
@@ -39,10 +38,10 @@ class BertDescription:
     model_description:ModelDescription=ModelDescription()
     model_specific:BertSpecific=BertSpecific()
 
-    def get_model(self, config, logger, mongo, result_id, half=True):
+    def get_model(self, config, logger, half=True):
         # Load Custom Ops
         # TODO : Add Error Condition
-        handle_custom_ops(config, logger, mongo, result_id)
+        handle_custom_ops(config, logger)
         config.embedding_serialization_factor=self.model_specific.embedding_serialization_factor
         config.layers_per_ipu=self.model_description.ipu_layout.layers_per_ipu
         config.recompute_checkpoint_every_layer=self.model_description.ipu_options.recompute_checkpoint_every_layer

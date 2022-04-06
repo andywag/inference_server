@@ -1,17 +1,19 @@
 from transformers import AutoTokenizer, AutoConfig
-from .fine_tune_config import ModelDescription, ModelResult
-from .ipu_options import get_options
+from fine_tune_config import ModelDescription, ModelResult
+from ipu_options import get_options
 from datasets import load_dataset
-from .optimization import get_optimizer
+from optimization import get_optimizer
 
 import poptorch
-from celery import states
 import pymongo
 import dataclasses
 from bson.objectid import ObjectId
-from .mongo_interface import MongoInterface
+from mongo_interface import MongoInterface
 import time
 import socket
+
+import logging 
+logger = logging.getLogger('test')
 
 def create_data_loader(model_description:ModelDescription, model_specific, tokenizer, options):
     dataset = load_dataset(model_description.dataset.name)
@@ -26,7 +28,7 @@ def create_data_loader(model_description:ModelDescription, model_specific, token
 
 
 
-def main(top_description, result_id:str, celery, logger):
+def main(top_description):
 
     #model_description = model_description.model_description
     model_specific = top_description.model_specific
@@ -34,29 +36,22 @@ def main(top_description, result_id:str, celery, logger):
 
     mongo = MongoInterface()
 
-    result_id = ObjectId(result_id)
     # Create Result In Mongo Database
-    logger.info(f"Update Status {result_id}")
-    mongo.update_status(result_id,"Loading Data")
-    mongo.update_host(result_id, socket.gethostname())
     try :
         options = get_options(model_description)
         config = AutoConfig.from_pretrained(model_description.checkpoint)
         tokenizer = AutoTokenizer.from_pretrained(model_description.tokenizer, use_fast=True)
         data_loader = create_data_loader(model_description, model_specific, tokenizer, options)
     except Exception as e:
-        mongo.update_status(result_id,"Data Error",str(e))
         logger.info(f"Data Loading Error {str(e)}")
         return
 
     try :
-        mongo.update_status(result_id,"Compiling")
-        model = top_description.get_model(config, logger, mongo, result_id, half=True)
+        model = top_description.get_model(config, logger, half=True)
         optimizer = get_optimizer(model_description, model)
         model.train()
         model_ipu = poptorch.trainingModel(model, options, optimizer)
     except Exception as e:
-        mongo.update_status(result_id,"Model Error",str(e))
         logger.info(f"Model Definition Error {str(e)}")
         return 
 
@@ -73,11 +68,9 @@ def main(top_description, result_id:str, celery, logger):
         #    data['label'])
 
     except Exception as e:
-        mongo.update_status(result_id, "CompileError",str(e))
         logger.info(f"Compilation Error {str(e)}")
         return 
 
-    mongo.update_status(result_id,"Running")
 
     
     start_time = time.time()
@@ -108,7 +101,6 @@ def main(top_description, result_id:str, celery, logger):
         #logger.info("A", model_description)
         samples += model_description.execution_description.batch_size*model_description.execution_description.batches_per_step*model_description.execution_description.gradient_accumulation 
         result_data = float(result[0][0].data)
-        mongo.update_accuracy(result_id, result_data, samples/(time.time()-start_time))
         delta = time.time() - tic
 
         
@@ -119,7 +111,6 @@ def main(top_description, result_id:str, celery, logger):
             'accuracy':0.0
         }
 
-        mongo.update_result(result_id, result)
 
         logger.info(f"{epoch} - {step} - {samples}: {result_data}")
         results.append(result_data)
@@ -129,10 +120,12 @@ def main(top_description, result_id:str, celery, logger):
         
     model_ipu.detachFromDevice()
 
-    mongo.update_status(result_id,"Finished")
 
     return {"status":"Success", "results":results}
 
+from bert_model.bert_config_new import BertDescription
 if __name__ == '__main__':
     print("Hello World")
+    description = BertDescription()
+    main(description)
 
