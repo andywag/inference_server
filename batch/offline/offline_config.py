@@ -14,6 +14,7 @@ class Ipu:
     use_popdist:bool=False
     recompute_checkpoint_every_layer:bool = True
     ipus_per_replica:int=4
+    gradient_accumulation:int=8
     layers_per_ipu:List[float]=field(default_factory=lambda: [0, 4, 4, 4])
     matmul_proportion:List[float]=field(default_factory=lambda: [0.25,0.25,0.25,0.25])
 
@@ -47,6 +48,7 @@ class InferDescription:
     cloud:str=''
     endpoint:str = ''
     result_folder:str=''
+    train:bool = False
 
     optimizer:OptimizerDescription = OptimizerDescription()
     ipu:Ipu = Ipu()

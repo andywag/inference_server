@@ -23,9 +23,23 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 from .bert_fused_attention import BertFusedSelfAttention
+import os
+import ctypes
 
 def logger(msg):
     logging.info(msg)
+
+
+def handle_custom_ops(config):
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
+    if os.path.exists(CUSTOM_OP_PATH):
+        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
+        ops_and_patterns.setVocabSize(config.vocab_size)
+        ops_and_patterns.setEmbeddingSize(config.hidden_size)
+        ops_and_patterns.setHiddenSize(config.hidden_size)
+    else:
+        exit()
 
 class OnehotGather(nn.Module):
     def __init__(self):
@@ -275,15 +289,20 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
         logger("-----------------------------------------------------------")
 
     def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
+        print("Inside Forward Call", self.num_labels, labels, self.training)
         inputs = {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
             "token_type_ids": token_type_ids,
-            "labels": labels
+            "labels": None
         }
         output = super().forward(**inputs)
         if self.training:
-            final_loss = poptorch.identity_loss(output.loss, reduction="none")
+            print("BBBBBBB", output.logits.shape, output.logits.dtype, labels.shape, labels.dtype)
+            final_loss = F.cross_entropy(
+                output.logits.view(-1,self.num_labels),
+                labels.view(-1))
+            final_loss = poptorch.identity_loss(final_loss, reduction="none")
             return final_loss, output.logits
         else:
             indices = torch.argmax(output.logits,dim=-1)

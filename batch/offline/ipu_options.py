@@ -48,7 +48,7 @@ def training_options(opts, ipu_options):
     opts._Popart.set("disableGradAccumulationTensorStreams", True)
 
 
-    opts.randomSeed(ipu_options.random_seed)
+    #opts.randomSeed(ipu_options.random_seed)
 
     opts.Training.gradientAccumulation(ipu_options.gradient_accumulation)
     opts.Training.accumulationAndReplicationReductionType(poptorch.ReductionType.Mean)
@@ -66,11 +66,12 @@ def training_options(opts, ipu_options):
     }
     opts.setAvailableMemoryProportion(mem_prop)
 
-def get_options(options):
+def get_options(options, train:bool=False):
 
     opts = poptorch.Options()
     constant_options(opts)
-    if options.training:
+    
+    if train:
         training_options(opts, options)
 
     

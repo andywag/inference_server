@@ -20,6 +20,18 @@ from datasets import load_from_disk
 import sys
 
 from cloud_utils import CloudFileContainer
+from .optimization import get_optimizer
+
+def handle_custom_ops(config):
+    file_dir = os.path.dirname(os.path.realpath(__file__))
+    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
+    if os.path.exists(CUSTOM_OP_PATH):
+        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
+        ops_and_patterns.setVocabSize(config.vocab_size)
+        ops_and_patterns.setEmbeddingSize(config.hidden_size)
+        ops_and_patterns.setHiddenSize(config.hidden_size)
+    else:
+        exit()
 
 def create_dataset(dataset, model_class:Base, options):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
@@ -34,7 +46,8 @@ def create_dataset(dataset, model_class:Base, options):
     if 'label' in dataset.column_names:
         columns.append('label')
         
-    tokenized_dataset.set_format(type='torch', columns=columns)
+    tokenized_dataset.set_format(type='torch', columns=columns, dtype=torch.int32)
+    print("Base", len(tokenized_dataset))
 
     data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=False)
 
@@ -60,10 +73,11 @@ def update_status(mongo, t, m=None):
     if mongo is not None:
         mongo.update_status(t,m)
 
-def main(inference_config:InferDescription, mongo, celery, logger):
+def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
+    
     
     cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)
-    print("File System", cloud_file_system)
+    logger.info(f"File System {cloud_file_system}")
 
    
     if inference_config.classifier.classifier_type == 'Sequence':
@@ -75,7 +89,7 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     else:
         handle_error("Classifier Not Found") 
 
-    options = get_options(inference_config.ipu)
+    options = get_options(inference_config.ipu, train)
 
     # Handle Data Loading
     update_status(mongo, "Data")
@@ -89,9 +103,14 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     # Model Compilation
     update_status(mongo, "Model")
     try :
-        config = model_class.create_config()
+        config = model_class.create_config(train)
         model = model_class.model.from_pretrained(model_class.inference_config.checkpoint, config=config).half()
-        model_ipu = poptorch.inferenceModel(model, options)
+        if train:
+            optimizer = get_optimizer(inference_config.optimizer, model)
+            model.train()
+            model_ipu = poptorch.trainingModel(model, options, optimizer)
+        else:
+            model_ipu = poptorch.inferenceModel(model, options)
 
     except Exception as e:
         update_status(mongo, "ModelError",str(e))
@@ -103,9 +122,12 @@ def main(inference_config:InferDescription, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        model_ipu.compile(*model_class.compile_inputs(first_data))
+        input_data = model_class.compile_inputs(first_data)
+        model_ipu.compile(*input_data)
 
     except Exception as e:
+        logger.info(f"A{e}")
+        traceback.print_exc()
         update_status(mongo, "CompileError",str(e))
         handle_error(e)
         return 
@@ -129,9 +151,9 @@ def main(inference_config:InferDescription, mongo, celery, logger):
 
         try :
             result = model_ipu(*model_class.model_inputs(data))
-            logger.info(f"{len(result)}")
-            logger.info(f"{result[0].shape}")
-            logger.info(f"{result[1].shape}")
+            #logger.info(f"{len(result)}")
+            #logger.info(f"{result[0].shape}")
+            #logger.info(f"{result[1].shape}")
 
         except Exception as e:
             update_status(mongo, "RunError",str(e))

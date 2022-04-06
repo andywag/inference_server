@@ -32,6 +32,12 @@ class ModelResult(Generic[T]):
     results:List[Result]=field(default_factory=lambda: [])
     status:List[StatusLog]=field(default_factory=lambda: [StatusLog("Submitted",Int64(time.time()))])
 
+client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
+db = client.run_database
+infer = db.infer
+fine = db.fine
+infer_results = db.infer_result
+
 
 class MongoInterface:
 
@@ -40,7 +46,7 @@ class MongoInterface:
         self.db = self.client.run_database
         self.collection = self.db[collection]
         self.result_collection = self.db[result_collection]
-        self.result_id = result_id
+        self.result_id = ObjectId(result_id)
 
     def update_accuracy(self, accuracy=0.0, qps=0.0):
         self.collection.update_one({"_id": self.result_id},
@@ -85,10 +91,12 @@ class MongoInterface:
         self.result_collection.insert_one(test_result)
 
 
-client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
-db = client.run_database
-infer = db.infer
-infer_results = db.infer_result
+
+def get_mongo_interface(result_id:str, train:bool=False):
+    if train:
+        return MongoInterface("fine","fine_result", result_id)
+    else:
+        return MongoInterface("infer","infer_result", result_id)
 
 def get_infer_result(self, result_id):
     return infer.find_one({'_id':result_id})
@@ -99,14 +107,30 @@ def get_infer_results():
     for document in cursor:
         document['sid'] = str(document['_id'])
         del document['_id']
-        #document[]
         documents.append(document)
     return documents
 
+def get_fine_result(self, result_id):
+    return fine.find_one({'_id':result_id})
+
+def get_fine_results():
+    cursor = fine.find({})
+    documents = []
+    for document in cursor:
+        document['sid'] = str(document['_id'])
+        del document['_id']
+        documents.append(document)
+    return documents
     
 
-def create_mongo_interface(model_description:T):
-    mongo = MongoInterface("infer", "infer_result")
+def get_table_name(train:bool=False):
+    mongo_table = "infer"
+    if train:
+        mongo_table="fine"
+
+def create_mongo_interface(model_description:T, train:bool=False):
+    table = get_table_name(train)
+    mongo = MongoInterface(table, f"{table}_result")
     result = ModelResult(model_description)
     result_dict = dataclasses.asdict(result)
     result_id = mongo.create_result(result_dict)

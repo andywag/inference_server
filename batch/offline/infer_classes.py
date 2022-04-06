@@ -12,6 +12,7 @@ import ctypes
 import sys
 import logging
 from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification, PipelinedBertForPretraining
+from .bert_model.modeling import handle_custom_ops
 
 logger = logging.getLogger()
 import traceback
@@ -20,6 +21,8 @@ import time
 import torch
 import json
 import pickle
+
+
 
 class Base:
     def __init__(self, inference_config:InferDescription):
@@ -34,12 +37,21 @@ class Base:
             max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
         return tokenized_dataset
 
-    def create_config(self):
+    def create_config(self, train):
+        self.train = train
         config = AutoConfig.from_pretrained(self.inference_config.checkpoint)
+        config.training = train
         config.embedding_serialization_factor=self.inference_config.ipu.embedding_serialization_factor
         config.num_labels = self.inference_config.classifier.num_labels
-        config.layers_per_ipu = [24]
+        if train:
+            config.layers_per_ipu = self.inference_config.ipu.layers_per_ipu
+        else:
+            config.layers_per_ipu = [24]
         config.recompute_checkpoint_every_layer=False
+        config.problem_type = "single_label_classification"
+        handle_custom_ops(config)
+
+
         return config
 
     def compile_inputs(self, first_data):
@@ -71,6 +83,19 @@ class Sequence(Base):
     def __init__(self, inference_config):
         super().__init__(inference_config)
         self.model = PipelinedBertForSequenceClassification
+
+    def compile_inputs(self, first_data):
+        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+        if not self.train:
+            return [input_ids, input_ids, input_ids]
+        else:
+            return [input_ids, input_ids, input_ids, first_data['label']]
+
+    def model_inputs(self, data):
+        if not self.train:
+            return [data['input_ids'], data['token_type_ids'], data['attention_mask']]
+        else:
+            return [data['input_ids'], data['token_type_ids'], data['attention_mask'], data['label']]
 
     def handle_result(self, result, data):
         #super().handle_result(result,data)
@@ -213,7 +238,5 @@ class MLM(Base):
         self.output_results(mongo, total_results, cloud_file_system)
 
 
-        #masked_lm_positions = self.masked_lm_positions
-        #with open('save.pik','wb') as fp:
-        #    pickle.dump({'data':data,'masked_lm_positions':self.masked_store},fp)
+    
 
