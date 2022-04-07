@@ -33,6 +33,8 @@ class Base:
 
     def tokenize(self, tokenizer, dataset):
         self.tokenizer = tokenizer
+
+
         tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
             max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
         return tokenized_dataset
@@ -45,6 +47,8 @@ class Base:
         config.num_labels = self.inference_config.classifier.num_labels
         if train:
             config.layers_per_ipu = self.inference_config.ipu.layers_per_ipu
+            config.recompute_checkpoint_every_layer=True
+            self.inference_config.detail.batch_size=4
         else:
             config.layers_per_ipu = [24]
         config.recompute_checkpoint_every_layer=False
@@ -100,28 +104,35 @@ class Sequence(Base):
     def handle_result(self, result, data):
         #super().handle_result(result,data)
         super().handle_result(result,data)
-        if 'label' in data:
-            for x in range(len(result[0])):
-                index = result[1][x].item()
-                #self.result_store.append((index, result[0][x][index]))
-            error = (result[1] - data['label']).numpy()
-            error = np.count_nonzero(error)
-            return error
+        if self.train:
+            logger.info("Training Results")
         else:
-            return None
+            if 'label' in data:
+                for x in range(len(result[0])):
+                    index = result[1][x].item()
+                #self.result_store.append((index, result[0][x][index]))
+                error = (result[1] - data['label']).numpy()
+                error = np.count_nonzero(error)
+                return error
+            else:
+                return None
 
     def post_process(self, mongo, cloud_file_system=None):
         results = []
         import pickle
         count = 0
-        for x in range(len(self.result_store)):
-            result = self.result_store[x]
-            for y in range(len(result[1])):
-                count += 1
-                index = result[1][y].item()
-                results.append({'class':index,'probability':result[0][y][index].item()})
+        if self.train:
+            with open('save.pik','wb') as fp:
+                pickle.dump({'result':self.result_store,'label':self.label_store}, fp)
+        else:
+            for x in range(len(self.result_store)):
+                result = self.result_store[x]
+                for y in range(len(result[1])):
+                    count += 1
+                    index = result[1][y].item()
+                    results.append({'class':index,'probability':result[0][y][index].item()})
         
-        self.output_results(mongo, results, cloud_file_system)
+            self.output_results(mongo, results, cloud_file_system)
         
         
             
@@ -174,7 +185,7 @@ class MLM(Base):
         self.model = PipelinedBertForPretraining
         self.masked_store = []
 
-    def create_config(self):
+    def create_config(self, train:bool=False):
         config = super().create_config()
         config.pred_head_transform = False
         return config

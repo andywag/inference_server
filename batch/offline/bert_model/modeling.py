@@ -289,20 +289,15 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
         logger("-----------------------------------------------------------")
 
     def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
-        print("Inside Forward Call", self.num_labels, labels, self.training)
         inputs = {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
             "token_type_ids": token_type_ids,
-            "labels": None
+            "labels": labels
         }
         output = super().forward(**inputs)
         if self.training:
-            print("BBBBBBB", output.logits.shape, output.logits.dtype, labels.shape, labels.dtype)
-            final_loss = F.cross_entropy(
-                output.logits.view(-1,self.num_labels),
-                labels.view(-1))
-            final_loss = poptorch.identity_loss(final_loss, reduction="none")
+            final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.logits
         else:
             indices = torch.argmax(output.logits,dim=-1)

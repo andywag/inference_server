@@ -33,7 +33,7 @@ def handle_custom_ops(config):
     else:
         exit()
 
-def create_dataset(dataset, model_class:Base, options):
+def create_dataset(dataset, model_class:Base, options, train:bool=False):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
     inference_config = model_class.inference_config
     tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
@@ -46,10 +46,12 @@ def create_dataset(dataset, model_class:Base, options):
     if 'label' in dataset.column_names:
         columns.append('label')
         
-    tokenized_dataset.set_format(type='torch', columns=columns, dtype=torch.int32)
-    print("Base", len(tokenized_dataset))
+    tokenized_dataset.set_format(type='torch', columns=columns)
 
-    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=False)
+    shuffle = False
+    if train:
+        shuffle = True
+    data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=shuffle)
 
     return data_loader
 
@@ -57,9 +59,9 @@ def decode_dataset_tag(tag, cloud_file_system):
     return cloud_file_system.load_dataset(tag)
 
 
-def create_data_loader(model_class:Base, options, cloud_file_system):
+def create_data_loader(model_class:Base, options, cloud_file_system, train:bool=False):
     dataset = decode_dataset_tag(model_class.inference_config.dataset, cloud_file_system)
-    return create_dataset(dataset, model_class, options)
+    return create_dataset(dataset, model_class, options, train)
 
 
 
@@ -74,10 +76,13 @@ def update_status(mongo, t, m=None):
         mongo.update_status(t,m)
 
 def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
-    
-    
+    print(f"A {inference_config}")
+
     cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)
     logger.info(f"File System {cloud_file_system}")
+
+    if train:
+        inference_config.detail.batch_size=2
 
    
     if inference_config.classifier.classifier_type == 'Sequence':
@@ -94,7 +99,7 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     # Handle Data Loading
     update_status(mongo, "Data")
     try :    
-        data_loader = create_data_loader(model_class, options, cloud_file_system)
+        data_loader = create_data_loader(model_class, options, cloud_file_system, train)
     except Exception as e:
         update_status(mongo, "DataError",str(e))
         handle_error(f"Data Loading Error {str(e)}",e)
@@ -122,8 +127,10 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        input_data = model_class.compile_inputs(first_data)
-        model_ipu.compile(*input_data)
+        #print("A", first_data['input_ids'].dtype, first_data['input_ids'].shape)
+        #input_data = model_class.compile_inputs(first_data)
+        
+        model_ipu.compile(*model_class.model_inputs(first_data))
 
     except Exception as e:
         logger.info(f"A{e}")
@@ -135,7 +142,8 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     update_status(mongo, "Running")
 
     errors,samples = 0,0
-    
+    epoch = 0
+
     start_time = time.time()
     while True:
         
@@ -146,8 +154,15 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
             try :
                 data = next(iter_loader)
             except Exception as e:
-                logger.info(f"Finished with Dataset {e}")
-                break
+                if train: 
+                    if inference_config.optimizer.epochs is not None and epoch == inference_config.optimizer.epochs-1:
+                        break
+                    iter_loader = iter(data_loader)
+                    data = next(iter_loader)  
+                    epoch += 1
+                else:
+                    logger.info(f"Finished with Dataset {e}")
+                    break
 
         try :
             result = model_ipu(*model_class.model_inputs(data))
@@ -160,7 +175,7 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
             handle_error("Run Error", e)
             return
 
-        samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step 
+        samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step *inference_config.ipu.gradient_accumulation
         
         error = model_class.handle_result(result, data)
             
@@ -171,9 +186,13 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
             if mongo is not None:
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
-            
-            logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
-            mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
+            if train:
+                logger.info(f"Loss : {result[0].item()} QPS : {samples/(time.time()-start_time)}  Time : {(time.time()-start_time)}")
+                if mongo is not None:
+                    mongo.update_loss(loss=result[0].item(),qps=samples/(time.time()-start_time))
+            else:
+                logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
+                mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
     update_status(mongo, "Finished")
 
     model_ipu.detachFromDevice()

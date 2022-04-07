@@ -39,7 +39,7 @@ def get_lr_scheduler(optimizer,
 
 def get_optimizer(optimizer_description, model):
 
-
+    print("Optimizer", optimizer_description)
     # Do not apply weight_decay for one-dimensional parameters
     regularized_params = []
     non_regularized_params = []

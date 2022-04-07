@@ -3,7 +3,7 @@ from typing import List, Optional
 
 @dataclass 
 class Ipu:
-    batches_per_step:int=64
+    batches_per_step:int=16
     embedding_serialization_factor:int=1
     enable_half_partials:bool=True
     training:bool=False
@@ -14,7 +14,7 @@ class Ipu:
     use_popdist:bool=False
     recompute_checkpoint_every_layer:bool = True
     ipus_per_replica:int=4
-    gradient_accumulation:int=8
+    gradient_accumulation:int=32
     layers_per_ipu:List[float]=field(default_factory=lambda: [0, 4, 4, 4])
     matmul_proportion:List[float]=field(default_factory=lambda: [0.25,0.25,0.25,0.25])
 
@@ -24,7 +24,7 @@ class OptimizerDescription:
     lr_warmup:float=0.28
     learning_rate:float=0.00005
     loss_scaling:float=16.0
-    weight_decay:float=0.01
+    weight_decay:float=0.0
     enable_half_first_order_momentum:bool=False
     epochs:Optional[int]=None
 

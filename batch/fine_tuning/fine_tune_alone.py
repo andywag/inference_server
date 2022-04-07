@@ -62,10 +62,10 @@ def main(top_description):
     try :
         data = next(iter_loader)
         
-        #model_ipu.compile(data['input_ids'],
-        #    data['attention_mask'],
-        #    data['token_type_ids'],
-        #    data['label'])
+        model_ipu.compile(data['input_ids'],
+            data['attention_mask'],
+            data['token_type_ids'],
+            data['label'])
 
     except Exception as e:
         logger.info(f"Compilation Error {str(e)}")
@@ -127,5 +127,7 @@ from bert_model.bert_config_new import BertDescription
 if __name__ == '__main__':
     print("Hello World")
     description = BertDescription()
+    description.model_description.execution_description.batch_size = 16
+    #description.model_description.execution_description.batches_per_step = 64
     main(description)
 

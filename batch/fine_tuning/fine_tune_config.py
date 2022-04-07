@@ -24,7 +24,7 @@ class ExecutionDescription:
     batch_size:int=4
     batches_per_step:int=16
     replication_factor:int=1
-    gradient_accumulation:int=32
+    gradient_accumulation:int=1
     random_seed:int=42
     training_steps:Optional[int]=None
     epochs:Optional[int]=None

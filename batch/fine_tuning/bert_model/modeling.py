@@ -265,6 +265,7 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
             "labels": labels
         }
         output = super().forward(**inputs)
+        print("A", labels, labels.shape, labels.dtype, output.logits.shape, output.logits.dtype)
         if self.training:
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.logits

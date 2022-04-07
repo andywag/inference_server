@@ -17,6 +17,11 @@ class MongoInterface:
             {"$set":  {"loss":  accuracy, "qps":qps} } 
         )
 
+    def update_loss(self, result_id, loss=0.0, qps=0.0):
+        self.collection.update_one({"_id":result_id},
+            {"$set":  {"loss":  accuracy, "qps":qps} } 
+        )
+
     def update_id(self, result_id, uuid):
         self.collection.update_one({"_id": result_id},
             {"$set":  {"uuid":  uuid} } 

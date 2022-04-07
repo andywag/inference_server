@@ -18,7 +18,7 @@ def create_data_loader(model_description:ModelDescription, model_specific, token
     if model_description.dataset.train is not None:
         dataset = dataset[model_description.dataset.train]
     tokenized_dataset = dataset.map(lambda x: tokenizer(x[model_description.dataset.text],
-        max_length=model_specific.sequence_length, truncation=True, padding=True),batched=True)
+        max_length=model_specific.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
     tokenized_dataset.set_format(type='torch', columns=['input_ids', 'token_type_ids', 'attention_mask', 'label'])
     data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=model_description.execution_description.batch_size, shuffle=True)
 
@@ -67,10 +67,10 @@ def main(top_description, result_id:str, celery, logger):
     try :
         data = next(iter_loader)
         
-        #model_ipu.compile(data['input_ids'],
-        #    data['attention_mask'],
-        #    data['token_type_ids'],
-        #    data['label'])
+        model_ipu.compile(data['input_ids'],
+            data['attention_mask'],
+            data['token_type_ids'],
+            data['label'])
 
     except Exception as e:
         mongo.update_status(result_id, "CompileError",str(e))
