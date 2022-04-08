@@ -22,6 +22,7 @@ import sys
 from cloud_utils import CloudFileContainer
 from .optimization import get_optimizer
 import shutil
+import tempfile
 
 def handle_custom_ops(config):
     file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -80,6 +81,15 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     print(f"A {inference_config}")
 
     cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)
+    temp_checkpoint = None
+
+    if "cloud:" in inference_config.checkpoint:
+        temp_checkpoint = tempfile.mkdtemp() 
+        update_status(mongo, 'Downloading Checkpoint')
+        remote_location = inference_config.checkpoint.replace("cloud:","")
+        cloud_file_system.get_directory(remote_location,temp_checkpoint)
+        inference_config.checkpoint = temp_checkpoint
+
     logger.info(f"File System {cloud_file_system}")
 
     if train:
@@ -176,8 +186,12 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
             handle_error("Run Error", e)
             return
 
-        samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step *inference_config.ipu.gradient_accumulation
-        
+        if train:
+            samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step *inference_config.ipu.gradient_accumulation
+        else:
+            samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step 
+
+
         error = model_class.handle_result(result, data)
             
         if error is not None:
@@ -196,11 +210,15 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
 
     if train and inference_config.result_folder is not None:
-        model_ipu.save_pretrained('temp_storage')
+        temp_storage = tempfile.mkdtemp()
+        model_ipu.save_pretrained(temp_storage)
         update_status(mongo, "Storing Checkpoint")
 
-        cloud_file_system.store_directory('temp_storage', inference_config.result_folder)
-        shutil.rmtree('temp_storage') 
+        cloud_file_system.store_directory(temp_storage, inference_config.result_folder)
+        shutil.rmtree(temp_storage) 
+
+    if temp_checkpoint is not None:
+        shutil.rmtree(temp_checkpoint)
 
     update_status(mongo, "Finished")
 

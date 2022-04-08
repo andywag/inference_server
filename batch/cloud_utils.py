@@ -57,4 +57,6 @@ class CloudFileContainer:
 
     def get_directory(self, cloud_path, local_path):
         if self.cloud_file_system is not None:
-            self.cloud_file_system.get(cloud_path, local_path)
+            self.cloud_file_system.get(cloud_path, local_path, recursive=True)
+
+
