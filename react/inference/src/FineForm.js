@@ -16,26 +16,30 @@ function FineForm(props) {
       model_type:"BERT",
       model_size:"Base",
       checkpoint:"bert-base-uncased",
-      dataset:"imdb",
+      dataset:"imdb,train,text",
       tokenizer:"bert-base-uncased",
       classifier:"Sequence",
       num_labels:2, 
       cloud:"None",
       endpoint:"",
-      results:""
+      results:"",
+      learningRate:.00001,
+      epochs:5
     },
     {
       name:"imdb_cloud",
       model_type:"BERT",
       model_size:"Base",
       checkpoint:"bert-base-uncased",
-      dataset:"imdb",
+      dataset:"imdb,train,text",
       tokenizer:"bert-base-uncased",
       classifier:"Sequence",
       num_labels:2, 
       cloud:"AzureBlob",
       endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
-      results:""
+      results:"graphcore/imdb_checkpoint",
+      learningRate:.00001,
+      epochs:5
     }
   ]
 
@@ -53,6 +57,8 @@ function FineForm(props) {
     setCloud(examples[x].cloud);
     setEndPoint(examples[x].endpoint);
     setResultsFolder(examples[x].results)
+    setLearningRate(examples[x].learningRate)
+    setEpochs(examples[x].epochs)
   }
 
 
@@ -61,9 +67,9 @@ function FineForm(props) {
   const [modelSize, setModelSize] = useState("Base");
   const [tokenizer, setTokenizer] = useState("bert-base-uncased");
   const [checkpoint, setCheckpoint] = useState("bert-base-uncased");
-  const [dataset, setDataset] = useState("imdb");
+  const [dataset, setDataset] = useState("imdb,train,text");
   const [optimizer, setOptimizer] = useState("ADAM");
-  const [learningRate, setLearningRate] = useState(.0001);
+  const [learningRate, setLearningRate] = useState(.00001);
   const [epochs, setEpochs] = useState(1);
 
   const [classifier, setClassifier] = useState("Sequence");
@@ -143,6 +149,9 @@ function FineForm(props) {
         <SimpleSelect label="optimizer" value={optimizer} set={setOptimizer} options={["ADAM","LAMB"]} grid={3}/>
         <SimpleText label="learning-rate" value={learningRate} set={setLearningRate} grid={3}/>
         <SimpleText label="epochs" value={epochs} set={setEpochs} grid={3}/>
+    </Grid>
+    <Grid container padding={1}>
+      <SimpleText label="results" value={resultsFolder} set={setResultsFolder} grid={3}/>
     </Grid>
     <Grid container padding={1}>
       <Grid item xs={2}>
