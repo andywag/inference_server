@@ -21,6 +21,7 @@ import sys
 
 from cloud_utils import CloudFileContainer
 from .optimization import get_optimizer
+import shutil
 
 def handle_custom_ops(config):
     file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -193,6 +194,14 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
             else:
                 logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
                 mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
+
+    if train and inference_config.result_folder is not None:
+        model_ipu.save_pretrained('temp_storage')
+        update_status(mongo, "Storing Checkpoint")
+
+        cloud_file_system.store_directory('temp_storage', inference_config.result_folder)
+        shutil.rmtree('temp_storage') 
+
     update_status(mongo, "Finished")
 
     model_ipu.detachFromDevice()
