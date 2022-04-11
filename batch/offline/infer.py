@@ -47,7 +47,12 @@ def create_dataset(dataset, model_class:Base, options, train:bool=False):
     columns = model_class.dataset_columns
     if 'label' in dataset.column_names:
         columns.append('label')
-        
+    if 'masked_lm_positions' in tokenized_dataset.column_names:
+        columns.append('masked_lm_positions')
+    if 'masked_lm_labels' in tokenized_dataset.column_names:
+        columns.append('masked_lm_labels') 
+
+    print("C", columns)
     tokenized_dataset.set_format(type='torch', columns=columns)
 
     shuffle = False
@@ -138,7 +143,6 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        #print("A", first_data['input_ids'].dtype, first_data['input_ids'].shape)
         #input_data = model_class.compile_inputs(first_data)
         
         model_ipu.compile(*model_class.model_inputs(first_data))
@@ -202,9 +206,14 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
             if train:
-                logger.info(f"Loss : {result[0].item()} QPS : {samples/(time.time()-start_time)}  Time : {(time.time()-start_time)}")
+                if not isinstance(result, tuple):
+                    loss = result.item()
+                else:
+                    loss = result[0].item()
+
+                logger.info(f"Loss : {loss} QPS : {samples/(time.time()-start_time)}  Time : {(time.time()-start_time)}")
                 if mongo is not None:
-                    mongo.update_loss(loss=result[0].item(),qps=samples/(time.time()-start_time))
+                    mongo.update_loss(loss=loss,qps=samples/(time.time()-start_time))
             else:
                 logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
                 mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))

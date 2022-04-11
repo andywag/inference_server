@@ -193,8 +193,15 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
         
         prediction_scores, _ = self.cls(masked_output, pooled_output)
         #prediction_scores = self.cls(masked_output)
-        scores = torch.topk(prediction_scores, 5, axis=-1)
-        return scores
+        if self.training:
+            masked_lm_loss = F.cross_entropy(
+                prediction_scores.view(-1, self.config.vocab_size),
+                masked_lm_labels.view(-1),
+                ignore_index=0).float()
+            return masked_lm_loss
+        else:
+            scores = torch.topk(prediction_scores, 5, axis=-1)
+            return scores
         #outputs = (prediction_scores, sequential_relationship_score,) + outputs[2:]
 
         #if masked_lm_labels is not None and next_sentence_label is not None:

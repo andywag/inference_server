@@ -185,8 +185,34 @@ class MLM(Base):
         self.model = PipelinedBertForPretraining
         self.masked_store = []
 
+    def tokenize(self, tokenizer, dataset):
+        self.tokenizer = tokenizer
+
+        def create_position(input_ids, max_len):
+            new_result = np.zeros(shape=(max_len,), dtype=np.int)
+            result = np.where(np.asarray(input_ids) == 103)
+    
+            max_padding = min(max_len, len(result[0]))
+            new_result[:max_padding] = result[0][:max_padding]
+            return new_result
+
+        sequence_length = self.inference_config.detail.sequence_length
+        mask_length = self.inference_config.classifier.num_labels
+
+        tokenized_dataset = dataset.map(lambda x: tokenizer(x['label_text'],
+            max_length=mask_length, truncation=True, pad_to_max_length=True),batched=True)
+        tokenized_dataset = tokenized_dataset.map(lambda batch: {"masked_lm_labels": batch["input_ids"]}, batched=True)
+
+        tokenized_dataset = tokenized_dataset.map(lambda x: tokenizer(x['text'],
+            max_length=sequence_length, truncation=True, pad_to_max_length=True),batched=True)
+
+        tokenized_dataset = tokenized_dataset.map(lambda x: {'masked_lm_positions':create_position(x['input_ids'], mask_length)})
+
+        print("B", tokenized_dataset.column_names)
+        return tokenized_dataset
+
     def create_config(self, train:bool=False):
-        config = super().create_config()
+        config = super().create_config(train)
         config.pred_head_transform = False
         return config
 
@@ -197,9 +223,16 @@ class MLM(Base):
         input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
         position_shape = list(input_shape)
         position_shape[1] = self.inference_config.classifier.num_labels
+
+        # Position Ids 
         position_mask = torch.zeros(position_shape, dtype=torch.int64)
         self.position_mask = position_mask
         inputs.append(position_mask)
+
+        # Position Labels
+        position_label = torch.zeros(position_shape, dtype=torch.int)
+        inputs.append(position_label)
+        
         return inputs
 
     def model_inputs(self, data):
@@ -208,7 +241,7 @@ class MLM(Base):
         position_values = (data['input_ids'] == 103)
         positions = position_values.nonzero()
 
-        masked_lm_positions=torch.zeros(size=(len(data['input_ids']),self.inference_config.classifier.num_labels),dtype=torch.int)
+        masked_lm_positions=torch.zeros(size=(len(data['input_ids']),self.inference_config.classifier.num_labels),dtype=torch.int64)
         self.masked_store.append(masked_lm_positions)
 
         row_index = [0]*len(data['input_ids'])
@@ -220,7 +253,9 @@ class MLM(Base):
             if row_index[row] < 32:
                 masked_lm_positions[row][col] = value
 
-        m_inputs.append(masked_lm_positions)
+
+        m_inputs.append(data['masked_lm_positions'])
+        m_inputs.append(data['masked_lm_labels'])
         return m_inputs
 
     def handle_result(self, result, data):
