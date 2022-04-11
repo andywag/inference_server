@@ -66,17 +66,30 @@ const examples = [
     model_type:"BERT",
     model_size:"Base",
     checkpoint:"bert-base-uncased",
-    dataset:"cloud:graphcore/masked_test,text",
+    dataset:"graphcore/masked_test,text",
     tokenizer:"bert-base-uncased",
     classifier:"MLM",
     num_labels:32,
     cloud:"AzureBlob",
     endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
-    results:"cloud:graphcore/mlm"
+    results:"graphcore/mlm"
+  },
+  {
+    name:"imdb_e2e",
+    model_type:"BERT",
+    model_size:"Base",
+    checkpoint:"cloud:graphcore/imdb_checkpoint",
+    dataset:"graphcore/masked_test,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"Sequence",
+    num_labels:2,
+    cloud:"AzureBlob",
+    endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
+    results:"graphcore/imdb_results"
   }
 ]
 
-const exampleNames = ['Imdb','Indonlu','NER','MLM','MLM(Cloud)']
+const exampleNames = ['Imdb','Indonlu','NER','MLM','MLM(Cloud)','IMDB(Cloud)']
 
 function FineForm(props) {
   
