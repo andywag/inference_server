@@ -131,6 +131,7 @@ def get_table_name(train:bool=False):
     mongo_table = "infer"
     if train:
         mongo_table="fine"
+    return mongo_table
 
 def create_mongo_interface(model_description:T, train:bool=False):
     table = get_table_name(train)

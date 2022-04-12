@@ -6,10 +6,10 @@ from dataclasses import dataclass
 import dataclasses
 import pymongo
 
-from fine_runner import ModelConfig, ModelResponse
+#from fine_runner import ModelConfig, ModelResponse
 from offline_runner import InferConfig
 
-import fine_runner
+#import fine_runner
 import offline_runner
 from mongo_common import get_infer_results, get_final_results
 
@@ -31,7 +31,7 @@ def get_results():
     return fine_runner.get_results()
 
 @app.post("/tune")
-def run_tune(model_input:ModelConfig) -> ModelResponse:
+def run_tune(model_input:InferConfig)  :
     return offline_runner.run(model_input, True)
    
 
