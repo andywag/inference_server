@@ -53,12 +53,14 @@ class ModelResponse:
 
 def run(model_input:InferConfig, train:bool=False) -> ModelResponse:
     model_description = model_input.create_model_description()
-    if train:
-        model_description.train = True
-    mongo, result_id = create_mongo_interface(model_description)
+    mongo, result_id = create_mongo_interface(model_description,  train)
 
     model_description_dict = dataclasses.asdict(model_description)
-    uuid = run_infer.delay(model_description_dict, str(result_id))
+    #if train:
+    uuid = run_infer.delay(model_description_dict, str(result_id), train)
+    #else:
+    #    uuid = run_infer.delay(model_description_dict, str(result_id))
+
     # Attach the ID to the Database
     mongo.update_id(str(uuid))
     mongo.update_status("Submitted")

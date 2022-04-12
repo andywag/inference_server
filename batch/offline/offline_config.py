@@ -4,7 +4,7 @@ from typing import List, Optional
 @dataclass 
 class Ipu:
     batches_per_step:int=16
-    embedding_serialization_factor:int=2
+    embedding_serialization_factor:int=1
     enable_half_partials:bool=True
     training:bool=False
     auto_loss_scaling:bool=False

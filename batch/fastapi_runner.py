@@ -11,7 +11,7 @@ from offline_runner import InferConfig
 
 #import fine_runner
 import offline_runner
-from mongo_common import get_infer_results, get_final_results
+from mongo_common import get_infer_results, get_final_results, get_fine_results
 
 app = FastAPI()
 app.add_middleware(
@@ -28,10 +28,11 @@ app.add_middleware(
 
 @app.get("/results")
 def get_results():
-    return fine_runner.get_results()
+    return get_fine_results()
+    #return fine_runner.get_results()
 
 @app.post("/tune")
-def run_tune(model_input:InferConfig)  :
+def run_tune(model_input:InferConfig):
     return offline_runner.run(model_input, True)
    
 
@@ -40,7 +41,7 @@ def get_results():
     return get_infer_results()
 
 @app.post("/infer")
-def run_tune(model_input:InferConfig) :
+def run_infer(model_input:InferConfig) :
     return offline_runner.run(model_input)
     
 @app.get("/infer_final_result")
