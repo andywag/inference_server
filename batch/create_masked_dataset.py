@@ -5,7 +5,7 @@ from transformers import AutoTokenizer, AutoConfig
 import torch
 
 wiki_data = load_dataset('wikitext','wikitext-103-v1')
-wiki_data = wiki_data['test']
+wiki_data = wiki_data['train']
 
 print("A", len(wiki_data))
 print(wiki_data[3]['text'])
@@ -66,10 +66,8 @@ for x in range(len(positions)):
 #        if index == 32:
 #            break
 
-print("A", masked_lm_positions[128])
 
 
 
-print(position_values.shape, positions.shape)
 
 

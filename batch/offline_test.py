@@ -1,10 +1,11 @@
 
 
-from adlfs import AzureBlobFileSystem
-from cloud_utils import CloudFileContainer
+import pickle
+import numpy as np 
 
+with open('temp.pik','rb') as fp:
+    result = pickle.load(fp)
 
-endpoint = "DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net"
-container = CloudFileContainer('AzureBlob', endpoint=endpoint)
+print(len(result))
+print(result[0][0])
 
-container.store_directory('temp', 'graphcore')
