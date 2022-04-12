@@ -143,7 +143,6 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
     tic = time.time()
     try :
         first_data = next(iter_loader)
-        #input_data = model_class.compile_inputs(first_data)
         
         model_ipu.compile(*model_class.model_inputs(first_data))
 
@@ -181,9 +180,6 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
 
         try :
             result = model_ipu(*model_class.model_inputs(data))
-            #logger.info(f"{len(result)}")
-            #logger.info(f"{result[0].shape}")
-            #logger.info(f"{result[1].shape}")
 
         except Exception as e:
             update_status(mongo, "RunError",str(e))
@@ -206,17 +202,19 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
             if train:
-                if not isinstance(result, tuple):
-                    loss = result.item()
-                else:
-                    loss = result[0].item()
+                #if not isinstance(result, tuple):
+                #    loss = result.item()
+                #else:
+                loss = result[0].item()
 
                 logger.info(f"Loss : {loss} QPS : {samples/(time.time()-start_time)}  Time : {(time.time()-start_time)}")
                 if mongo is not None:
                     mongo.update_loss(loss=loss,qps=samples/(time.time()-start_time))
             else:
-                logger.info(f"QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
-                mongo.update_accuracy(accuracy=0.0,qps=samples/(time.time()-start_time))
+                accuracy = float(np.mean(result[1].numpy()))
+               
+                logger.info(f"Accuracy : {accuracy} QPS : {samples/(time.time()-start_time)} , Time : {(time.time()-start_time)}")
+                mongo.update_accuracy(accuracy=accuracy,qps=samples/(time.time()-start_time))
 
     if train and inference_config.result_folder is not None:
         temp_storage = tempfile.mkdtemp()

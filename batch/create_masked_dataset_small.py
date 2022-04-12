@@ -4,7 +4,7 @@ import numpy as np
 from transformers import AutoTokenizer, AutoConfig
 import torch
 
-wiki_data = load_dataset('wikitext','wikitext-103-v1', split='train[:1%]')
+wiki_data = load_dataset('wikitext','wikitext-103-v1', split='train[:2%]')
 #wiki_data = wiki_data['train[0:5]']
 
 print("A", len(wiki_data))

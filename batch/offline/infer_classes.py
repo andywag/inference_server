@@ -52,18 +52,18 @@ class Base:
         else:
             config.layers_per_ipu = [24]
         config.recompute_checkpoint_every_layer=False
-        config.problem_type = "single_label_classification"
+        #config.problem_type = "single_label_classification"
         handle_custom_ops(config)
 
 
         return config
 
-    def compile_inputs(self, first_data):
-        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        return [input_ids, input_ids, input_ids]
+    #def compile_inputs(self, first_data):
+    #    input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+    #    return [input_ids, input_ids, input_ids]
 
     def model_inputs(self, data):
-        return [data['input_ids'], data['token_type_ids'], data['attention_mask']]
+        return [data['input_ids'],  data['attention_mask'], data['token_type_ids']]
 
     def handle_result(self, result, data):
         self.result_store.append((result))
@@ -88,18 +88,18 @@ class Sequence(Base):
         super().__init__(inference_config)
         self.model = PipelinedBertForSequenceClassification
 
-    def compile_inputs(self, first_data):
-        input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-        if not self.train:
-            return [input_ids, input_ids, input_ids]
-        else:
-            return [input_ids, input_ids, input_ids, first_data['label']]
+    #def compile_inputs(self, first_data):
+    #    input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
+    #    if not self.train:
+    #        return [input_ids, input_ids, input_ids]
+    #    else:
+    #        return [input_ids, input_ids, input_ids, first_data['label']]
 
     def model_inputs(self, data):
         if not self.train:
-            return [data['input_ids'], data['token_type_ids'], data['attention_mask']]
+            return [data['input_ids'], data['attention_mask'], data['token_type_ids']]
         else:
-            return [data['input_ids'], data['token_type_ids'], data['attention_mask'], data['label']]
+            return [data['input_ids'], data['attention_mask'], data['token_type_ids'],  data['label']]
 
     def handle_result(self, result, data):
         #super().handle_result(result,data)
@@ -199,9 +199,21 @@ class MLM(Base):
         sequence_length = self.inference_config.detail.sequence_length
         mask_length = self.inference_config.classifier.num_labels
 
-        tokenized_dataset = dataset.map(lambda x: tokenizer(x['label_text'],
-            max_length=mask_length, truncation=True, pad_to_max_length=True),batched=True)
-        tokenized_dataset = tokenized_dataset.map(lambda batch: {"masked_lm_labels": batch["input_ids"]}, batched=True)
+        def create_labels(labels, mlen=32):
+            def internal(x):
+                new_result =[0]*mlen 
+                result = tokenizer.convert_tokens_to_ids(x)
+                new_len = min(mlen, len(result))
+                new_result[:new_len] = result[:new_len]
+                return new_result
+
+            return [internal(x) for x in labels]
+
+        #tokenized_dataset = dataset.map(lambda x: tokenizer(x['label_text'],
+        #    max_length=mask_length, truncation=True, pad_to_max_length=True),batched=True)
+        #tokenized_dataset = tokenized_dataset.map(lambda batch: {"masked_lm_labels": convert_labels(batch["input_ids"])}, batched=True)
+        tokenized_dataset = dataset.map(lambda batch: {"masked_lm_labels": create_labels(batch["label_text"], mask_length)}, batched=True)
+
 
         tokenized_dataset = tokenized_dataset.map(lambda x: tokenizer(x['text'],
             max_length=sequence_length, truncation=True, pad_to_max_length=True),batched=True)
@@ -259,7 +271,7 @@ class MLM(Base):
         return m_inputs
 
     def handle_result(self, result, data):
-        self.result_store.append((result))
+        self.result_store.append((result[0]))
         if 'label' in data:
             self.label_store.append(data['label'])
         
@@ -267,6 +279,8 @@ class MLM(Base):
 
     def post_process(self, mongo, cloud_file_system=None):
         data = self.result_store
+        #with open('temp.pik','wb') as fp:
+        #    pickle.dump(data,fp)
 
         index = 0
         total_results = []

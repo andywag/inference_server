@@ -118,7 +118,7 @@ def accuracy_masked(out, targ, mask_val):
     return (out.argmax(dim=-1) == targ).float().mul(mask).div(num_unmasked).sum(1).mean()
 
 
-class PipelinedBertForPretraining(transformers.BertForPreTraining):
+class PipelinedBertForPretraining(transformers.BertForMaskedLM):
     def __init__(self, config):
         super().__init__(config)
         self.gather_indices = OnehotGather()
@@ -126,9 +126,6 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
         for layer in self.bert.encoder.layer:
             layer.attention.self = BertFusedSelfAttention(self.config)
 
-        if not self.config.pred_head_transform:
-            # Disable prediction head transform
-            self.cls.predictions.transform = nn.Identity()
 
         if self.config.embedding_serialization_factor > 1:
             self.cls.predictions.decoder = SerializedLinear(self.config.hidden_size,
@@ -148,9 +145,6 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
             layer = recomputation_checkpoint(layer) if self.config.recompute_checkpoint_every_layer else layer
             self.bert.encoder.layer[index] = poptorch.BeginBlock(layer, f"Encoder{index}", ipu_id=ipu)
             logger(f"Encoder {index:<2} --> IPU {ipu}")
-
-        logger("Pooler     --> IPU 0")
-        self.bert.pooler = poptorch.BeginBlock(self.bert.pooler, "Pooler", ipu_id=0)
 
         logger("Classifier --> IPU 0")
         self.cls = poptorch.BeginBlock(self.cls, "Classifier", ipu_id=0)
@@ -177,46 +171,53 @@ class PipelinedBertForPretraining(transformers.BertForPreTraining):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def forward(self, input_ids, attention_mask, token_type_ids, masked_lm_positions, masked_lm_labels=None, next_sentence_label=None):
+    def forward(self, input_ids, attention_mask, token_type_ids, masked_lm_positions, masked_lm_labels=None):
         inputs = {
             "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids
+            "attention_mask": attention_mask
         }
 
+        #print("A", input_ids[0])
+        #print("B", attention_mask[0])
+        #print("D", masked_lm_positions[0])
+
         outputs = self.bert(**inputs)
-        sequence_output, pooled_output = outputs[:2]
+        sequence_output = outputs[0]
         #sequence_output = outputs[0]
 
+        #print("CC", sequence_output[0])
         # Select only the masked tokens for the classifier
         masked_output = self.gather_indices(sequence_output, masked_lm_positions)
         
-        prediction_scores, _ = self.cls(masked_output, pooled_output)
+        prediction_scores = self.cls(masked_output)
+        #print("DDD", prediction_scores.shape)
+        #scores = torch.topk(prediction_scores, 5, axis=-1)
+        #print("C", masked_output)
+        #print("D", prediction_scores)
+        #print("E", self.cls.predictions.decoder.weight)
+        #print("F", self.cls.predictions.bias)
+
+        scores = prediction_scores
         #prediction_scores = self.cls(masked_output)
         if self.training:
             masked_lm_loss = F.cross_entropy(
                 prediction_scores.view(-1, self.config.vocab_size),
                 masked_lm_labels.view(-1),
                 ignore_index=0).float()
-            return masked_lm_loss
+            masked_lm_acc = accuracy_masked(prediction_scores.view([-1, masked_lm_labels.shape[1], self.config.vocab_size]), masked_lm_labels, 0)
+            return masked_lm_loss, masked_lm_acc
         else:
-            scores = torch.topk(prediction_scores, 5, axis=-1)
-            return scores
-        #outputs = (prediction_scores, sequential_relationship_score,) + outputs[2:]
-
-        #if masked_lm_labels is not None and next_sentence_label is not None:
-        #    masked_lm_loss = F.cross_entropy(
-        #        prediction_scores.view(-1, self.config.vocab_size),
-        #        masked_lm_labels.view(-1),
-        #        ignore_index=0).float()
-        #    next_sentence_loss = F.cross_entropy(sequential_relationship_score.view(-1, 2), next_sentence_label.view(-1)).float()
-        #    total_loss = poptorch.identity_loss(masked_lm_loss + next_sentence_loss, reduction="none")
-
-        #    next_sentence_acc = accuracy(sequential_relationship_score.view([-1, 2]), next_sentence_label.view(-1))
-            # masked_lm_labels: 0 if corresponding token not masked, original value otherwise
-        #    masked_lm_acc = accuracy_masked(prediction_scores.view([-1, self.config.mask_tokens, self.config.vocab_size]), masked_lm_labels, 0)
-        #    outputs = (total_loss, masked_lm_loss, next_sentence_loss, masked_lm_acc, next_sentence_acc)
-        #return outputs
+            #
+            masked_lm_acc = None
+            #print("Positions", masked_lm_positions[0])
+            #print("Labels", masked_lm_labels[0])
+            #print("Scores", scores[0])
+            if masked_lm_labels is not None:
+                scores = torch.topk(prediction_scores, 5, axis=-1)
+                masked_lm_acc = accuracy_masked(prediction_scores.view([-1, masked_lm_labels.shape[1], self.config.vocab_size]), masked_lm_labels, 0)
+            #    print("B", masked_lm_acc)
+            return scores, masked_lm_acc
+       
     @classmethod
     def from_pretrained(cls, *args, **kwargs):
         # Prevent word_embedding serialization when loading from pretrained so weights are loaded
