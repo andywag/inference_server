@@ -34,7 +34,6 @@ class Base:
     def tokenize(self, tokenizer, dataset):
         self.tokenizer = tokenizer
 
-
         tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
             max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True),batched=True)
         return tokenized_dataset
@@ -88,12 +87,6 @@ class Sequence(Base):
         super().__init__(inference_config)
         self.model = PipelinedBertForSequenceClassification
 
-    #def compile_inputs(self, first_data):
-    #    input_ids = torch.zeros(first_data['input_ids'].shape,dtype=torch.int32)
-    #    if not self.train:
-    #        return [input_ids, input_ids, input_ids]
-    #    else:
-    #        return [input_ids, input_ids, input_ids, first_data['label']]
 
     def model_inputs(self, data):
         if not self.train:
@@ -143,11 +136,33 @@ class Token(Base):
         self.model = PipelinedBertForTokenClassification
         self.offset_store = []
 
+    def model_inputs(self, data):
+        if not self.train:
+            return [data['input_ids'], data['attention_mask'], data['token_type_ids']]
+        else:
+            return [data['input_ids'], data['attention_mask'], data['token_type_ids'],  data['label']]
+
     def tokenize(self, tokenizer, dataset):
-        tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
-            max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True,return_length=True),batched=True)
-        self.offset_store=tokenized_dataset['offset_mapping']
-        self.length_store=tokenized_dataset['length']
+        if self.train:
+            def create_labels(data, mlen):
+                new_results = [0]*mlen
+                new_results[1:len(data)+1] = data
+                return new_results
+   
+            def convert(data):
+                return [" ".join(x) for x in data]
+                #return " ".join(x)
+            tokenized_dataset = dataset.map(lambda x: tokenizer(convert(x['tokens']),
+                max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True,return_length=True),batched=True)
+            
+            tokenized_dataset = tokenized_dataset.map(lambda x: {'label':create_labels(x['tags'],self.inference_config.detail.sequence_length)})
+
+        else:
+            print("Base", dataset.column_names)
+            tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
+                max_length=self.inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True,return_length=True),batched=True)
+            self.offset_store=tokenized_dataset['offset_mapping']
+            self.length_store=tokenized_dataset['length']
         return tokenized_dataset
 
     def handle_result(self, result, data):
@@ -158,6 +173,9 @@ class Token(Base):
         return None
 
     def post_process(self, mongo, cloud_file_system=None):
+        if self.train:
+            return 
+            
         data = self.result_store
         offsets = self.offset_store
         offset_index = 0
@@ -278,10 +296,9 @@ class MLM(Base):
         return None
 
     def post_process(self, mongo, cloud_file_system=None):
+        
         data = self.result_store
-        #with open('temp.pik','wb') as fp:
-        #    pickle.dump(data,fp)
-
+       
         index = 0
         total_results = []
         for x in range(len(data[0])): # Batch Index

@@ -39,13 +39,11 @@ def create_dataset(dataset, model_class:Base, options, train:bool=False):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
     inference_config = model_class.inference_config
     tokenizer = AutoTokenizer.from_pretrained(inference_config.tokenizer, use_fast=True)
-    # TODO : Offset mapping only used for offset_mapping in NER
-    #tokenized_dataset = dataset.map(lambda x: tokenizer(x['text'],
-    #    max_length=inference_config.detail.sequence_length, truncation=True, pad_to_max_length=True,return_offsets_mapping=True),batched=True)
+    
 
     tokenized_dataset = model_class.tokenize(tokenizer, dataset)
     columns = model_class.dataset_columns
-    if 'label' in dataset.column_names:
+    if 'label' in tokenized_dataset.column_names:
         columns.append('label')
     if 'masked_lm_positions' in tokenized_dataset.column_names:
         columns.append('masked_lm_positions')
@@ -109,6 +107,7 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
         model_class = MLM(inference_config)
     else:
         handle_error("Classifier Not Found") 
+    model_class.train = train
 
     options = get_options(inference_config.ipu, train)
 
@@ -202,9 +201,6 @@ def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
                 mongo.update_accuracy(accuracy=1.0-errors/samples,qps=samples/(time.time()-start_time))
         else:
             if train:
-                #if not isinstance(result, tuple):
-                #    loss = result.item()
-                #else:
                 loss = result[0].item()
 
                 logger.info(f"Loss : {loss} QPS : {samples/(time.time()-start_time)}  Time : {(time.time()-start_time)}")

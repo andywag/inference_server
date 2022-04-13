@@ -367,6 +367,8 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
             "token_type_ids": token_type_ids,
             "labels":labels
         }
+        print("A", input_ids)
+        print("B", labels)
         output = super().forward(**inputs)
         if self.training:
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
