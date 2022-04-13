@@ -66,7 +66,7 @@ const examples = [
     model_type:"BERT",
     model_size:"Base",
     checkpoint:"bert-base-uncased",
-    dataset:"graphcore/masked_test,text",
+    dataset:"graphcore/masked_small,text",
     tokenizer:"bert-base-uncased",
     classifier:"MLM",
     num_labels:32,

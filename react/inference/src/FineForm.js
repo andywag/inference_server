@@ -27,6 +27,21 @@ function FineForm(props) {
       epochs:5
     },
     {
+      name:"ner",
+      model_type:"BERT",
+      model_size:"Base",
+      checkpoint:"bert-base-cased",
+      dataset:"graphcore/connl_ner,train",
+      tokenizer:"bert-base-cased",
+      classifier:"Token",
+      num_labels:10, 
+      cloud:"AzureBlob",
+      endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
+      results:"graphcore/ner_checkpoint",
+      learningRate:.00001,
+      epochs:5
+    },
+    {
       name:"imdb_cloud",
       model_type:"BERT",
       model_size:"Base",
@@ -40,10 +55,27 @@ function FineForm(props) {
       results:"graphcore/imdb_checkpoint",
       learningRate:.00001,
       epochs:5
+    },
+    {
+      name:"bio_cloud",
+      model_type:"BERT",
+      model_size:"Base",
+      checkpoint:"emilyalsentzer/Bio_ClinicalBERT",
+      dataset:"graphcore/masked_small,text",
+      tokenizer:"emilyalsentzer/Bio_ClinicalBERT",
+      classifier:"MLM",
+      num_labels:32, 
+      cloud:"AzureBlob",
+      endpoint:"DefaultEndpointsProtocol=https;AccountName=andynlpstore;AccountKey=hkMiWLiqIpONH0NnyhmYAO9SmdVJZb1CazjCB6mnk/72ee5KdyKnq/ByS5s6/ZPUPbP2HImIveIvwxYSP88Reg==;EndpointSuffix=core.windows.net",
+      results:"graphcore/bio_checkpoint",
+      learningRate:.00001,
+      epochs:1
     }
   ]
+  
+  //emilyalsentzer/Bio_ClinicalBERT
 
-  const exampleNames = ["Imdb","Imdb(Cloud)"]
+  const exampleNames = ["Imdb", "Ner", "Imdb(Cloud)","BIO(Cloud)"]
   const updateExample = (x) => {
     console.log(examples[x].model_type)
     setRunId(examples[x].name);
