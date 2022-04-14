@@ -1,20 +1,16 @@
 
 from dataclasses import dataclass
-from typing import List, Optional, TypeVar
+from typing import List, Optional
 import numpy as np
 import os
 import multiprocessing as mp
 import time
 import threading
 import shutil
-from dacite import from_dict
-
 
 from signal_proto import SignalProto
 
 from triton_interface import ClientSideInterface, ServerSideInterface
-from rabbit_client import RabbitProtoWrapper
-import traceback
 
 def create_dir(location):
     if not os.path.exists(location):
@@ -37,14 +33,6 @@ class ModelProto:
     inputs:List[SignalProto]
     outputs:List[SignalProto]
     backends:int = 4
-
-    input_type:TypeVar=None 
-    output_type:TypeVar=None
-
-    def body_to_input(self, body:dict):
-        print("Base", self.input_type)
-        user = from_dict(data_class=self.input_type, data=body)
-        return user
 
     def _create_triton_config(self, path:str):
         """ Create the python config.pbtxt file """
@@ -87,24 +75,12 @@ class ModelProto:
             interface.run()
         except Exception as e:
             print("Client Failed", e)
-            traceback.print_exc()
 
-    def _run_rabbit(self):
-        """ Run the model side interface """
-        try:
-            interface = RabbitProtoWrapper(self)
-            interface.run()
-        except Exception as e:
-            print("Rabbit Failed : ", e)
-            traceback.print_exc()
 
     def run_ipu(self, port):
         
         print(f"Running Model {self.name} on {port}")
         self.model = self.create_model()
-
-        rabbit_thread = threading.Thread(target=self._run_rabbit, args=())
-        rabbit_thread.start()
 
         for x in range(self.backends):
             worker_thread = threading.Thread(target = self._run_client, args=(port+x,))

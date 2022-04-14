@@ -146,7 +146,6 @@ class GPT2TritonWrapper:
     def run_data(self, input, callback):
         
 
-        #print("Running Data")
         text_ids = list(input[0][0])
         input_length = int(input[1][0])
         output_length = int(input[2][0])

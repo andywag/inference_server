@@ -1,6 +1,6 @@
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 import numpy as np
 import os
 import multiprocessing as mp
@@ -26,6 +26,7 @@ class ProjectProto:
     """ Project Description : Class to hold a list of running models """
     name:str
     models:List[ModelProto]
+    models_dict:Dict[str,ModelProto]
 
     def create_triton_structure(self, path:str):
         """ Creates the triton structure for the project"""

@@ -12,6 +12,11 @@ import time
 
 import tritonclient.grpc as grpcclient
 import dataclasses
+import queue
+
+from rabbit_run_queue import RabbitRunQueue
+from dacite import from_dict
+import json
 
 class BasicFastApi:
     
@@ -23,6 +28,24 @@ class BasicFastApi:
         self.grpc_client = grpcclient.InferenceServerClient("localhost:8001")
 
         self.inputs, self.outputs = self.client.inputs, self.client.outputs
+
+        self.rabbit_queue = RabbitRunQueue(proto.name)
+
+    def run_rabbit(self, model_input):
+        tic = time.time()
+        data_queue = queue.Queue()
+        def callback(result):
+            data_queue.put(result)
+        model_input, state = self.create_rabbit_input(model_input)
+        model_input_dict = dataclasses.asdict(model_input)
+        model_input_json = json.dumps(model_input_dict)
+        # FIXME : time Hack for UUID
+        self.rabbit_queue.post_message(model_input_json, str(time.time()), callback)
+        result = data_queue.get()
+        result_dict = json.loads(result)
+        result = self.handle_rabbit_output(result_dict, state, tic)
+        print("Result", result)
+        return result
 
 
     def run(self, model_input):
@@ -47,14 +70,25 @@ class BasicFastApi:
     def handle_output(self, response, state, tic):
         raise NotImplementedError("")
 
+def create_rabbit_queues(prototype):
+    queue_map = dict()
+    for model in prototype.models:
+        rabbit_queue = RabbitRunQueue(model.name)
+        queue_map[model.name] = rabbit_queue
+    return queue_map
 
 def get_apis(prototype):
     apis = []
     for model in prototype.models:
-        #print("A", model.name)
         for api in model.get_fast_apis():
             print("Creating", api)
             apis.append(api.get_api())
+    return apis
+
+def get_apis_dict(prototype):
+    apis = dict()
+    for key in prototype.models_dict.keys():
+        apis[key] = prototype.models_dict[key].get_fast_apis()[0]
     return apis
 
 @dataclass
