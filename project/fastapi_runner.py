@@ -20,14 +20,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-apis = get_apis(project_proto)
+#apis = get_apis(project_proto)
 api_dict = get_apis_dict(project_proto)
 
-def rename(newname):
-    def decorator(f):
-        f.__name__ = newname
-        return f
-    return decorator
+#def rename(newname):
+#    def decorator(f):
+#        f.__name__ = newname
+#        return f
+#    return decorator
 
 
 #ner_run_queue = RabbitRunQueue('ner')
@@ -62,17 +62,17 @@ def run_bart(model_input:Bart) -> BartResponse:
 #def run_squad(model_input:Squad) -> SquadResponse:
 #    return apis[0].run(model_input)
 
-@app.post("/bart")
-def run_bart(model_input:Bart) -> BartResponse:
-    return apis[0].run(model_input)
+#@app.post("/bart")
+#def run_bart(model_input:Bart) -> BartResponse:
+#    return apis[0].run(model_input)
 
-@app.post("/ner")
-def run_ner(model_input:Ner) -> NerResponse:
-    return apis[1].run(model_input)
+#@app.post("/ner")
+#def run_ner(model_input:Ner) -> NerResponse:
+#    return apis[1].run(model_input)
 
-@app.post("/gpt")
-def run_gpt2(model_input:GPT2) -> GPT2Response:
-    return apis[2].run(model_input)
+#@app.post("/gpt")
+#def run_gpt2(model_input:GPT2) -> GPT2Response:
+#    return apis[2].run(model_input)
 
 
 uvicorn.run(app, host="0.0.0.0", port=8100, log_level="info")

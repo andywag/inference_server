@@ -41,7 +41,8 @@ project_proto = ProjectProto(
 if __name__ == '__main__':
     args = get_args()
     if args.mode == 'run':
-        project_proto.create_triton_structure("gen_models")
+        # Removed Triton Mode
+        # project_proto.create_triton_structure("gen_models")
         project_proto.run_ipus()
     elif args.mode == 'test':
         project_proto.single_client_test(args.model, batch_size=args.batch_size, threads=args.threads)
