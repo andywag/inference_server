@@ -27,8 +27,14 @@ def get_args():
 project_proto = ProjectProto(
     name="base_models",
     #models=[NerProto(), GPT2Proto()]
-    models=[BartProto(), NerProto(), GPT2Proto()]
-
+    #models=[SquadProto(), NerProto(), GPT2Proto()],
+    models=[BartProto(), NerProto(), GPT2Proto()],
+    models_dict = {
+        'squad' : SquadProto(),
+        'bart': BartProto(),
+        'ner' : NerProto(),
+        'gpt2' : GPT2Proto()
+    }
 )
 
 

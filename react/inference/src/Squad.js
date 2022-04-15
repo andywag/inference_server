@@ -80,7 +80,7 @@ function Squad(props) {
     //console.log(requestOptions)
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8100/squad",requestOptions)
+    fetch("http://192.168.3.114:8100/squad_rabbit",requestOptions)
       .then(response => response.json())
       .then(r => {
  

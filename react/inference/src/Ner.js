@@ -178,7 +178,7 @@ function Ner(props) {
     };
     console.log(requestOptions)
     var time = new Date().getTime()
-    fetch("http://192.168.3.114:8100/ner",requestOptions)
+    fetch("http://192.168.3.114:8100/ner_rabbit",requestOptions)
       .then(response => response.json())
       .then(r => {
           console.log(r)

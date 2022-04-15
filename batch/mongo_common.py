@@ -95,12 +95,11 @@ class MongoInterface:
         self.result_collection.insert_one(test_result)
 
 
-
-def get_mongo_interface(result_id:str, train:bool=False):
-    if train:
-        return MongoInterface("fine","fine_result", result_id)
-    else:
-        return MongoInterface("infer","infer_result", result_id)
+client = pymongo.MongoClient("mongodb://192.168.3.114:27017/")
+db = client.run_database
+infer = db.infer
+fine = db.fine
+infer_results = db.infer_result
 
 def get_infer_result(self, result_id):
     return infer.find_one({'_id':result_id})
@@ -131,6 +130,7 @@ def get_table_name(train:bool=False):
     mongo_table = "infer"
     if train:
         mongo_table="fine"
+    return mongo_table
 
 def create_mongo_interface(model_description:T, train:bool=False):
     table = get_table_name(train)

@@ -150,7 +150,6 @@ class BertInterfaceWrapper():
         results = np.reshape(results,(block_size,hidden,2)).astype(np.float32)
         logits = results.reshape((block_size,2*hidden))
 
-
         for spec in specs:
             real_logits = -10.0*np.ones(2*hidden).astype(np.float32)
             real_logits[:2*spec.l] = logits[spec.row,2*spec.col:2*spec.col + 2*spec.l].reshape(2*spec.l)
@@ -162,7 +161,7 @@ class BertInterfaceWrapper():
     
         results = np.reshape(results,(block_size,hidden,9)).astype(np.float32)
         logits = results.reshape((block_size,9*hidden))
-
+        
         for spec in specs:
             real_logits = -10.0*np.ones(9*hidden).astype(np.float32)
             real_logits[:9*spec.l] = logits[spec.row,9*spec.col:9*spec.col + 9*spec.l].reshape(9*spec.l)

@@ -18,6 +18,22 @@ input_ids = SignalProto('input_ids', np.zeros((1,512),dtype=np.int32))
 attention_mask = SignalProto('attention_mask', np.zeros((1,512),dtype=np.int32))
 result_ids = SignalProto('result_ids', np.zeros((1,32),dtype=np.int32))
 
+@dataclass
+class BartInput:
+    input_ids:List[List[int]]
+    attention_mask:List[List[int]]
+
+    def items(self):
+        return [np.asarray(self.input_ids), np.asarray(self.attention_mask)]
+
+@dataclass
+class BartOutput:
+    result:List[List[int]]
+
+    @staticmethod
+    def create(data:np.ndarray):
+        return BartOutput(data.tolist())
+
 class BartApi(BasicFastApi):        
     def __init__(self, proto):
         super().__init__(proto, 'bart')
@@ -25,6 +41,31 @@ class BartApi(BasicFastApi):
         self.output_type = BartResponse
         self.tokenizer = BartTokenizerFast.from_pretrained("ainize/bart-base-cnn")
     
+    def create_rabbit_input(self, bart:Bart):
+        result = self.tokenizer.encode_plus(bart.text, max_length=512, padding='max_length')
+        input_ids = result['input_ids']
+        attention_mask = result['attention_mask']
+
+        #input_ids = np.asarray([input_ids],dtype=np.int32)
+        #attention_mask = np.asarray([attention_mask],dtype=np.int32)
+
+        
+        return BartInput([input_ids], [attention_mask]), None
+
+    def handle_rabbit_output(self, response, state, tic):
+        logits = np.asarray(response["result"])
+        #print("A", logits)
+        #real_logits = logits.reshape([1,32])
+
+        results = self.tokenizer.decode(logits[0,2:])
+
+        return BartResponse(results, time.time() - tic)
+
+        #logits = np.asarray(response['result'])
+        #real_logits = logits[0][logits[0] != 0]
+        #text = self.tokenizer.decode(real_logits.tolist())
+        #return Bart(text, time.time() - tic)
+
     def create_input(self, ner:Bart, triton_input):
         #result = self.tokenizer.encode_plus(text = ner.text, max_length=512, 
         #    padding='max_length',return_offsets_mapping=True)
@@ -46,8 +87,8 @@ class BartApi(BasicFastApi):
     def handle_output(self, response, state, tic):
         #full_sum = state[0]
         #offset_mapping = state[1]
-        
-        logits = response.as_numpy("result_ids")
+        data = response('result')
+        logits = np.asarray(data)
         real_logits = logits.reshape([1,32])
 
         results = self.tokenizer.decode(real_logits[0,2:])
@@ -66,6 +107,9 @@ class BartProto(ModelProto):
     checkpoint:str ='ainize/bart-base-cnn'
     inputs:List[SignalProto] = [input_ids, attention_mask]
     outputs:List[SignalProto] = [result_ids]
+
+    input_type = BartInput
+    output_type = BartOutput
 
     def create_model(self):
         base_path = "./bart"
