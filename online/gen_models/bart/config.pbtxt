@@ -1,0 +1,33 @@
+name: "bart"
+backend: "python"
+max_batch_size: 512
+
+input [
+  {
+    name:"input_ids"
+    data_type: TYPE_INT32
+    dims: [1, 512]
+  }
+]
+
+input [
+  {
+    name:"attention_mask"
+    data_type: TYPE_INT32
+    dims: [1, 512]
+  }
+]
+
+output [
+  {
+    name:"result_ids"
+    data_type: TYPE_INT32
+    dims: [1, 32]
+  }
+]
+
+
+instance_group [{
+   count: 4
+   kind: KIND_CPU
+}]

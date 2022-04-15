@@ -1,0 +1,41 @@
+name: "gpt2"
+backend: "python"
+max_batch_size: 512
+
+input [
+  {
+    name:"input_ids"
+    data_type: TYPE_UINT32
+    dims: [128]
+  }
+]
+
+input [
+  {
+    name:"input_length"
+    data_type: TYPE_UINT32
+    dims: [1]
+  }
+]
+
+input [
+  {
+    name:"output_length"
+    data_type: TYPE_UINT32
+    dims: [1]
+  }
+]
+
+output [
+  {
+    name:"token_ids"
+    data_type: TYPE_UINT32
+    dims: [640]
+  }
+]
+
+
+instance_group [{
+   count: 4
+   kind: KIND_CPU
+}]

@@ -5,10 +5,10 @@ import numpy as np
 from functools import partial
 
 class RabbitProtoWrapper:
-    def __init__(self, model_proto):
+    def __init__(self, model_proto, config):
         self.model_proto = model_proto
 
-        params = pika.ConnectionParameters(heartbeat=30, host='192.168.3.114')
+        params = pika.ConnectionParameters(heartbeat=30, host=config['rabbit']['host'])
 
         connection = pika.BlockingConnection(params)
         self.rx_channel = connection.channel()

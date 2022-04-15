@@ -1,0 +1,23 @@
+
+defaults: &defaults
+  rabbit: 
+    host: 192.168.3.114
+  mongo:
+    host: 192.168.3.114
+  models:
+    squad:
+    ner:
+    bart:
+    gpt2:
+      
+
+server: &server
+  <<: *defaults
+  enabled: [ner, bart, gpt2]
+  
+squad: &squad
+  <<: *defaults
+  enabled: [squad, ner]
+
+
+
