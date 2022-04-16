@@ -1,8 +1,6 @@
 from transformers import AutoTokenizer, AutoConfig
-from .ipu_options import get_options
 from datasets import load_dataset
 
-import poptorch
 
 from .offline_config import InferDescription
 import sys
@@ -12,7 +10,8 @@ logger = logging.getLogger()
 import traceback
 import numpy as np
 import time
-import torch
+
+
 from adlfs import AzureBlobFileSystem
 
 from .infer_classes import Base, Sequence, Token, MLM
@@ -20,7 +19,6 @@ from datasets import load_from_disk
 import sys
 
 from cloud_utils import CloudFileContainer
-from .optimization import get_optimizer
 import shutil
 import tempfile
 
@@ -83,6 +81,12 @@ def update_status(mongo, t, m=None):
         mongo.update_status(t,m)
 
 def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
+    from .ipu_options import get_options
+    from .optimization import get_optimizer
+
+    import poptorch
+    import torch
+
     print(f"A {inference_config}")
 
     cloud_file_system = CloudFileContainer(inference_config.cloud, inference_config.endpoint)

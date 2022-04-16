@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pika
+dacite
+setuptools-rust
+transformers
+attrs
+pymongo
+celery
+datasets
+adlfs
+torch
+scipy

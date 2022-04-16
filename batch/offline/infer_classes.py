@@ -1,8 +1,6 @@
 from transformers import AutoTokenizer, AutoConfig
-from .ipu_options import get_options
 from datasets import load_dataset
 
-import poptorch
 from celery import states
 import dataclasses
 
@@ -11,16 +9,14 @@ import os
 import ctypes
 import sys
 import logging
-from .bert_model.modeling import PipelinedBertForSequenceClassification, PipelinedBertForTokenClassification, PipelinedBertForPretraining
-from .bert_model.modeling import handle_custom_ops
 
 logger = logging.getLogger()
 import traceback
 import numpy as np
 import time
-import torch
 import json
 import pickle
+import torch
 
 
 
@@ -40,6 +36,8 @@ class Base:
         return tokenized_dataset
 
     def create_config(self, train):
+        from .bert_model.modeling import handle_custom_ops
+
         self.train = train
         config = AutoConfig.from_pretrained(self.inference_config.checkpoint)
         config.training = train
@@ -85,6 +83,8 @@ class Base:
 
 class Sequence(Base):
     def __init__(self, inference_config):
+        from .bert_model.modeling import PipelinedBertForSequenceClassification
+
         super().__init__(inference_config)
         self.model = PipelinedBertForSequenceClassification
 
@@ -139,6 +139,8 @@ class Sequence(Base):
 
 class Token(Base):
     def __init__(self, inference_config):
+        from .bert_model.modeling import PipelinedBertForTokenClassification
+
         super().__init__(inference_config)
         self.model = PipelinedBertForTokenClassification
         self.offset_store = []
@@ -182,6 +184,8 @@ class Token(Base):
 class MLM(Base):
     def __init__(self, inference_config):
         super().__init__(inference_config)
+        from .bert_model.modeling import PipelinedBertForPretraining
+
         self.model = PipelinedBertForPretraining
         self.masked_store = []
 
