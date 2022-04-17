@@ -10,6 +10,7 @@ import { useTheme } from '@mui/material/styles';
 import SelectExample from './SelectExample';
 import ReactJson from 'react-json-view'
 import AppBar from '@mui/material/AppBar';
+import {ONLINE_ADDRESS} from './Constants'
 
 /*
 const requestOptions = {
@@ -80,7 +81,7 @@ function Squad(props) {
     //console.log(requestOptions)
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8100/squad_rabbit",requestOptions)
+    fetch(ONLINE_ADDRESS + "squad_rabbit",requestOptions)
       .then(response => response.json())
       .then(r => {
  

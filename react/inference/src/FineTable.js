@@ -7,6 +7,7 @@ import moment from 'moment';
 
 import ReactJson from 'react-json-view'
 import { DataGrid } from '@mui/x-data-grid';
+import {BATCH_ADDRESS} from './Constants'
 
 
 function FineTable(props) {
@@ -22,7 +23,7 @@ function FineTable(props) {
     
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8101/results",requestOptions)
+    fetch(BATCH_ADDRESS + "results",requestOptions)
       .then(response => response.json())
       .then(r => {
           var resultMap = {}
@@ -35,25 +36,7 @@ function FineTable(props) {
         })
   }
 
-  /*
-  const queryResults = (selected) => {
-    
-    console.log("Query Results", selected);
-    const qu = 'http://192.168.3.114:8101/infer_final_result?id=' + selected
-    fetch(qu,requestOptions)
-      .then(response => response.json())
-      .then(r => {
-        //console.log(r)
-        if (r) {
-          props.setInferResults(r);
-        }
-        else {
-          props.setInferResults({});
-        }
-          
-        })
-  }
-  */
+
 
 
   useEffect(() => {

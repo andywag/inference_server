@@ -7,7 +7,7 @@ import moment from 'moment';
 
 import ReactJson from 'react-json-view'
 import { DataGrid } from '@mui/x-data-grid';
-
+import {BATCH_ADDRESS} from './Constants'
 
 function BatchTable(props) {
   
@@ -22,7 +22,7 @@ function BatchTable(props) {
     
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8101/infer_results",requestOptions)
+    fetch(BATCH_ADDRESS + "infer_results",requestOptions)
       .then(response => response.json())
       .then(r => {
           var resultMap = {}
@@ -38,7 +38,7 @@ function BatchTable(props) {
   const queryResults = (selected) => {
     
     console.log("Query Results", selected);
-    const qu = 'http://192.168.3.114:8101/infer_final_result?id=' + selected
+    const qu = BATCH_ADDRESS + 'infer_final_result?id=' + selected
     fetch(qu,requestOptions)
       .then(response => response.json())
       .then(r => {

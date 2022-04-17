@@ -6,6 +6,7 @@ import React, { useState, useEffect } from 'react';
 import {FormControl, FormControlLabel, FormLabel, RadioGroup, Radio, TextField, Select, MenuItem, InputLabel} from '@mui/material';
 import {SimpleText, SimpleSelect} from './FormBlocks'
 import SelectExampleBatch from './SelectExampleBatch';
+import {BATCH_ADDRESS} from './Constants'
 
 
 function FineForm(props) {
@@ -141,7 +142,7 @@ function FineForm(props) {
     //console.log(requestOptions)
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8101/tune",requestOptions)
+    fetch(BATCH_ADDRESS + "tune",requestOptions)
       .then(response => response.json())
       .then(r => {
         console.log(r)
