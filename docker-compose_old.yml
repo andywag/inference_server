@@ -12,13 +12,6 @@ services:
       ports:
         - 27017:27017
       restart: unless-stopped
-    #nginx_proxy:
-    #  image: nginx
-    #  build:
-    #    context: nginx
-    #    dockerfile: Dockerfile
-    #  ports:
-    #    - "8080:8080"
     node:
       build: 
         context: react/inference
