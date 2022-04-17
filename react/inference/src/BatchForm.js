@@ -7,7 +7,7 @@ import {FormGroup, FormControlLabel} from '@mui/material';
 import {SimpleText, SimpleSelect} from './FormBlocks'
 import SelectExampleBatch from './SelectExampleBatch';
 import { Checkbox } from '@mui/material';
-
+import { BATCH_ADDRESS } from './Constants';
 const examples = [
   {
     name:"imdb",
@@ -154,7 +154,7 @@ function FineForm(props) {
     //console.log(requestOptions)
     var time = new Date().getTime()
 
-    fetch("http://192.168.3.114:8101/infer",requestOptions)
+    fetch(BATCH_ADDRESS + "infer",requestOptions)
       .then(response => response.json())
       .then(r => {
         console.log(r)
