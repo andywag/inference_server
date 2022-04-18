@@ -15,8 +15,6 @@
 import torch
 import poptorch
 import popart
-import popdist
-import popdist.poptorch
 import numpy as np
 import ctypes
 import os

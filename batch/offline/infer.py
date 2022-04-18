@@ -21,6 +21,7 @@ import sys
 from cloud_utils import CloudFileContainer
 import shutil
 import tempfile
+import poptorch
 
 def handle_custom_ops(config):
     file_dir = os.path.dirname(os.path.realpath(__file__))
