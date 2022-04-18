@@ -14,7 +14,7 @@ import socket
 from bson.objectid import ObjectId
 #from fine_tuning.bert_model.bert_config_new import BertDescription
 
-import poptorch
+#import poptorch
 
 app = Celery('infer', backend='rpc://', broker='pyamqp://192.168.3.114')
 #logger = get_task_logger(__name__)

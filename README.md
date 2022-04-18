@@ -1,21 +1,34 @@
 # Inference Engine
 
-This repository contains code for an inference engine on IPUs. It is a work in progress. 
+This repository contains code for an inference engine on IPUs. There are 2 modes
 
-## Installation
-### Triton
+1. Online : Low Latency Always Available - Code stored in online folder
+2. Offline : Batched Process attached through celery queue - Code stored in batch folder
 
-source ./install_triton.sh : Potentially (Most Likely Issues with Install)
+Both modes consist of a "server" which is running the server side functionallity. This 
+consists of FastAPI, RabbitMQ, Celery, and MongoDB. The models can be run on any device containing
+an IPU and attaches to the server using the Rabbit Message Queue.  
 
-### Python Libraries
-1. Requirements.txt : TBD
-2. Standard IPU Setup with Pytorch required
 
-## Run
+## Server Startup
+The server side can be run using docker compose. 
 
-The current code is not containerized and requires multiple parallel procsesses to be run. 
+1. docker-compose build
+2. docker-compose up
 
-1. IPUs : "python3 release_proto.py" run in project folder
-2. Triton : source start_triton_prototype.sh
-3. FastAPI : "python3 fastapi_runner.py" in project folder
-4. Node : "serve -s -l 8000" in react/inference folder
+## Online Startup
+
+The online models are registered with the server through the ZMQ message queue and can be run : 
+1. run `python3 release_proto.py run --config server` from online/release folder
+
+This mode will start ner, gpt2 and bart. The config.yaml file can be used change the models run. 
+Additional models can be added by : 
+
+1. Creating a prototype similar to ner_proto.py, squad_proto.py. 
+2. Creating an interface to your model which supports a simple input interface run(inputs, callback)
+
+## Offline Startup
+
+This mode runs on a host which is attached to IPUs. The models are run on demand using the run queue. 
+
+1. run `celery -A celery_worker worker --loglevel=INFO -n fine` from batch folder
