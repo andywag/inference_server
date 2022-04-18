@@ -73,7 +73,7 @@ class GTP2Wrapper(torch.nn.Module):
             self.sharding_mapping()
 
     def optimize(self):
-        from model.optimized_gpt2_attn import OptimizedGPT2Attention_test, OptimizedGPT2Attention_nobuffer
+        from optimized_gpt2_attn import OptimizedGPT2Attention_test, OptimizedGPT2Attention_nobuffer
 
         self.model.config.batch = self.args.batch_size
         self.model.config.seq = self.args.input_len + self.args.output_len

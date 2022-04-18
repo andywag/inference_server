@@ -66,8 +66,6 @@ class BartInterfaceWrapper:
         attention_mask = torch.from_numpy(input[1])
 
         encoder_result = self.encoder(input_ids, attention_mask)
-        #print("Finished Encoder")
-        #print("Encode Time", time.time() - tic)
 
         batch_size = self.options.batch_size
         output_length = self.options.output_length
