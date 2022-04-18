@@ -6,7 +6,7 @@ import SelectExample from './SelectExample';
 import ReactJson from 'react-json-view'
 import styles from './Ner.css';
 
-
+import {BASE_ADDRESS,ONLINE_ADDRESS} from './Constants'
 
 function Ner(props) {
   
@@ -178,7 +178,7 @@ function Ner(props) {
     };
     console.log(requestOptions)
     var time = new Date().getTime()
-    fetch("http://192.168.3.114:8100/ner_rabbit",requestOptions)
+    fetch(ONLINE_ADDRESS + "ner_rabbit",requestOptions)
       .then(response => response.json())
       .then(r => {
           console.log(r)

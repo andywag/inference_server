@@ -1,0 +1,43 @@
+version: "3.9"
+services:
+    rabbitmq3:
+      container_name: "rabbitmq"
+      image: rabbitmq:3.9-management-alpine
+      ports:
+        - '5672:5672'
+        - '15672:15672'
+    mongodb:
+      image : mongo
+      container_name: mongodb
+      ports:
+        - 27017:27017
+      restart: unless-stopped
+    #nginx_proxy:
+    #  image: nginx
+    #  build:
+    #    context: nginx
+    #    dockerfile: Dockerfile
+    #  ports:
+    #    - "8080:8080"
+    node:
+      build: 
+        context: react/inference
+        dockerfile: Dockerfile
+      ports:
+        - "8000:8000"
+    fast_batch:
+      build: 
+        context: batch
+        dockerfile: Dockerfile
+      ports:
+        - "8101:8101"
+      restart: on-failure
+      
+    fast_online:
+      build: 
+        context: online
+        dockerfile: Dockerfile
+      ports:
+        - "8100:8100"
+      restart: on-failure
+
