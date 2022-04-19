@@ -4,8 +4,8 @@ from datasets import load_dataset
 
 from .offline_config import InferDescription
 import sys
-import logging
-logger = logging.getLogger()
+#import logging
+#logger = logging.getLogger()
 
 import traceback
 import numpy as np
@@ -21,7 +21,7 @@ import sys
 from cloud_utils import CloudFileContainer
 import shutil
 import tempfile
-#import poptorch
+import poptorch
 
 def handle_custom_ops(config):
     file_dir = os.path.dirname(os.path.realpath(__file__))
