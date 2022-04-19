@@ -132,6 +132,11 @@ def get_table_name(train:bool=False):
         mongo_table="fine"
     return mongo_table
 
+
+def get_mongo_interface(result_id, train:bool):
+    table = get_table_name(train)
+    return MongoInterface(table,f"{table}_result",result_id)
+
 def create_mongo_interface(model_description:T, train:bool=False):
     table = get_table_name(train)
     mongo = MongoInterface(table, f"{table}_result")

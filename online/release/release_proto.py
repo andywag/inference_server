@@ -15,9 +15,6 @@ import yaml
 def get_args():
     parser = argparse.ArgumentParser()   
     parser.add_argument("mode", type=str, default="run", choices=["run","test","fastapi"])
-    parser.add_argument('--model', type=str, default="squad", choices=["squad","ner","gpt2"])
-    parser.add_argument('--threads',type=int, default=4)
-    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--config',type=str,default='server')
 
     args = parser.parse_args()
