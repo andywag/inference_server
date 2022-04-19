@@ -18,8 +18,8 @@ from transformers import BertTokenizerFast
 import time
 
 class NerApi(BasicFastApi):        
-    def __init__(self, proto):
-        super().__init__(proto, 'ner')
+    def __init__(self, proto, host):
+        super().__init__(proto, host, 'ner')
         self.input_type = Ner
         self.output_type = NerResponse
         self.tokenizer = BertTokenizerFast.from_pretrained("bert-large-cased")
@@ -95,5 +95,5 @@ class NerProto(ModelProto):
             ner=True)
         return model
 
-    def get_fast_apis(self):
-        return [NerApi(self)]
+    def get_fast_apis(self, rabbit_host):
+        return [NerApi(self, rabbit_host)]

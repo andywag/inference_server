@@ -61,7 +61,7 @@ class ModelProto:
             time.sleep(10)
 
 
-    def get_fast_apis(self):
+    def get_fast_apis(self, rabbit_host):
         return []
         
 

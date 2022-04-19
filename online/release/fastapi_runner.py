@@ -10,6 +10,7 @@ import uvicorn
 from api_classes import *
 from rabbit_run_queue import RabbitRunQueue
 from release_proto import models_map
+import yaml
 
 app = FastAPI()
 @app.get("/")
@@ -17,7 +18,13 @@ def home():
     return {"message":"Health Check Passed!"}
 
 
-api_dict = {k:v.get_fast_apis()[0] for k,v in models_map.items()}
+with open('config.yml') as fp:
+    config = yaml.safe_load(fp)
+    config = config['server']
+    rabbit_host = config['rabbit']['host']
+
+api_dict = {k:v.get_fast_apis(rabbit_host)[0] for k,v in models_map.items()}
+
 
 
 

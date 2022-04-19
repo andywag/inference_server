@@ -7,10 +7,10 @@ import time
 
 class RabbitRunQueue:
 
-    def __init__(self, queue_name):
+    def __init__(self, queue_name:str, host:str):
         self.queue_name = queue_name
 
-        params = pika.ConnectionParameters(heartbeat=30, host='192.168.3.114')
+        params = pika.ConnectionParameters(heartbeat=30, host=host)
         # Transmit Channel
         tx_connection = pika.BlockingConnection(params)
         self.tx_channel = tx_connection.channel()

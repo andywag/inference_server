@@ -18,12 +18,12 @@ import json
 
 class BasicFastApi:
     
-    def __init__(self, proto:ModelProto, path:str):
+    def __init__(self, proto:ModelProto, host:str, path:str):
         self.path = path
         self.proto = proto
         
 
-        self.rabbit_queue = RabbitRunQueue(proto.name)
+        self.rabbit_queue = RabbitRunQueue(proto.name, host)
 
     def run_rabbit(self, model_input):
         tic = time.time()
