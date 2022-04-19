@@ -1,11 +1,17 @@
 from transformers import AutoTokenizer, AutoConfig
 from datasets import load_dataset
 
+# Poptorch doesn't coexist well with celery. Added to avoid requiring poptorch on server
+
+try:
+    import poptorch
+except ImportError as e:
+    print("PopTorch Not Found")
+
+
 
 from .offline_config import InferDescription
 import sys
-#import logging
-#logger = logging.getLogger()
 
 import traceback
 import numpy as np
@@ -18,10 +24,11 @@ from .infer_classes import Base, Sequence, Token, MLM
 from datasets import load_from_disk
 import sys
 
-from cloud_utils import CloudFileContainer
+from .cloud_utils import CloudFileContainer
 import shutil
 import tempfile
-import poptorch
+import logging
+logger = logging.getLogger(__name__)
 
 def handle_custom_ops(config):
     file_dir = os.path.dirname(os.path.realpath(__file__))
@@ -79,8 +86,8 @@ def update_status(mongo, t, m=None):
     if mongo is not None:
         mongo.update_status(t,m)
 
-def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
-    import poptorch
+def main(inference_config:InferDescription, train:bool, mongo, celery):
+    #import poptorch
     import torch
 
     from .ipu_options import get_options

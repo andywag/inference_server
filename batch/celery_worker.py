@@ -11,6 +11,11 @@ from offline.offline_config import InferDescription
 import socket
 from bson.objectid import ObjectId
 
+# Poptorch doesn't coexist well with celery. Added to avoid requiring poptorch on server
+try:
+    import poptorch
+except ImportError as e:
+    print("PopTorch Not Found")
 
 app = Celery('infer', backend='rpc://', broker='pyamqp://192.168.3.114')
 
@@ -28,7 +33,7 @@ def run_infer(self, model_description_dict:dict, result_id:str, train:bool=False
 
     # TODO : Make Generic Support for Model
     model_description = dacite.from_dict(data_class=InferDescription, data=model_description_dict)
-    result = main(model_description, train, mongo, self, logger)
+    result = main(model_description, train, mongo, self)
     
     return result
 
