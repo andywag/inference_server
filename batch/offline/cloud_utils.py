@@ -50,7 +50,7 @@ class CloudFileContainer:
 
     def store_directory(self, local_path, cloud_path):
         if self.cloud_file_system is not None :
-            self.cloud_file_system.put(local_path, cloud_path, recursive=True)
+            self.cloud_file_system.put(local_path, cloud_path, recursive=True, overwrite=True)
 
             #with self.cloud_file_system.open(result_file, 'w') as fp:
             #    json.dump(results, fp)

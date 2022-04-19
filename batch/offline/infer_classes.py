@@ -300,7 +300,8 @@ class MLM(Base):
         return None
 
     def post_process(self, mongo, cloud_file_system=None):
-        
+        if self.train:
+            return 
         data = self.result_store
        
         index = 0
