@@ -24,20 +24,6 @@ class NerApi(BasicFastApi):
         self.output_type = NerResponse
         self.tokenizer = BertTokenizerFast.from_pretrained("bert-large-cased")
     
-    def create_input(self, ner:Ner, triton_input):
-        result = self.tokenizer.encode_plus(text = ner.text, max_length=384, 
-            padding='max_length',return_offsets_mapping=True)
-        full_sum = np.sum(np.asarray(result['attention_mask'],dtype=np.uint32))
-        input_ids = np.asarray([result['input_ids']],dtype=np.uint32)
-        token_type_ids = np.asarray([[full_sum]],dtype=np.uint32)
-        offset_mapping = result['offset_mapping']
-
-        triton_input[0].set_data_from_numpy(input_ids)
-        triton_input[1].set_data_from_numpy(token_type_ids)
-        triton_input[2].set_data_from_numpy(np.asarray([[0]],dtype=np.uint64))
-        
-        return full_sum, offset_mapping
-    
     def create_rabbit_input(self, ner:Ner):
         result = self.tokenizer.encode_plus(text = ner.text, max_length=384, 
             padding='max_length',return_offsets_mapping=True)

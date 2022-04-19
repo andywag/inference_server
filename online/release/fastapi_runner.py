@@ -49,32 +49,4 @@ app.add_middleware(
 )
 
 
-# 
-# FIXME : Models Need to be directly added at the file top level
-#
-#for api in apis:
-#    print(f"Creating API {api.path} {api.input_type} {api.output_type}")
-#    @app.post(f"/{api.path}", name=api.path)
-#    @rename(api.path)
-#    def runner(input_data:api.input_type) -> api.output_type:
-#        print("Running Fast API", api.path)
-#        return api.run(input_data)
-
-#@app.post("/squad")
-#def run_squad(model_input:Squad) -> SquadResponse:
-#    return apis[0].run(model_input)
-
-#@app.post("/bart")
-#def run_bart(model_input:Bart) -> BartResponse:
-#    return apis[0].run(model_input)
-
-#@app.post("/ner")
-#def run_ner(model_input:Ner) -> NerResponse:
-#    return apis[1].run(model_input)
-
-#@app.post("/gpt")
-#def run_gpt2(model_input:GPT2) -> GPT2Response:
-#    return apis[2].run(model_input)
-
-
 uvicorn.run(app, host="0.0.0.0", port=8100, log_level="info")

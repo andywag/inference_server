@@ -57,10 +57,8 @@ class ModelProto:
         rabbit_thread = threading.Thread(target=self._run_rabbit, args=(config,))
         rabbit_thread.start()
 
-      
         while True:
             time.sleep(10)
-        #print("Finished")
 
 
     def get_fast_apis(self):
