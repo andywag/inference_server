@@ -9,7 +9,6 @@ import threading
 import shutil
 
 from model_proto import ModelProto
-from general_client import GeneralClient
 
 BASE_PORT = 50000
 
@@ -42,7 +41,5 @@ class ProjectProto:
                 return m
         return None
 
-    def single_client_test(self, model_name, threads=4,batch_size=16, sim_length=65536):
-        client = GeneralClient(self._get_model(model_name), batch_size=batch_size)
-        client.parallel_packet(batch_size=batch_size, sim_length=sim_length,threads=threads)
+    
 

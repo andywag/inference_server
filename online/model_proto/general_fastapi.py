@@ -52,7 +52,7 @@ class BasicFastApi:
     def get_api(self):
         return self
 
-    def create_rabbit_input(self, ner:Ner):
+    def create_rabbit_input(self, model_input):
         """ Method which converts the input from FAST API to the model input """
         raise NotImplementedError("")
 
