@@ -6,11 +6,8 @@ from dataclasses import dataclass
 import dataclasses
 import pymongo
 
-#from fine_runner import ModelConfig, ModelResponse
-from offline_runner import InferConfig
-
-#import fine_runner
 import offline_runner
+from infer_config import InferConfig
 from mongo_common import get_infer_results, get_final_results, get_fine_results
 
 app = FastAPI()

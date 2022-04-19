@@ -7,25 +7,21 @@ from celery import states
 from mongo_common import MongoInterface, get_mongo_interface
 
 from offline.offline_config import InferDescription
-from offline.infer import main
-#from fine_tuning.fine_tune import main as fine_main
 
 import socket
 from bson.objectid import ObjectId
-#from fine_tuning.bert_model.bert_config_new import BertDescription
 
-#import poptorch
 
 app = Celery('infer', backend='rpc://', broker='pyamqp://192.168.3.114')
-#logger = get_task_logger(__name__)
 
 
 import logging
 logger = logging.getLogger(__name__)
-#logger = None
 
 @app.task(bind=True)
 def run_infer(self, model_description_dict:dict, result_id:str, train:bool=False):
+    from offline.infer import main
+
     mongo = get_mongo_interface(ObjectId(result_id), train)
     self.update_state(state=states.STARTED)
     mongo.update_host(socket.gethostname())

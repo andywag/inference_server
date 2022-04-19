@@ -80,11 +80,13 @@ def update_status(mongo, t, m=None):
         mongo.update_status(t,m)
 
 def main(inference_config:InferDescription, train:bool, mongo, celery, logger):
+    import poptorch
+    import torch
+
     from .ipu_options import get_options
     from .optimization import get_optimizer
 
-    import poptorch
-    import torch
+    
 
     print(f"A {inference_config}")
 
