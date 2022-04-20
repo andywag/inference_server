@@ -51,7 +51,7 @@ def get_options(config):
         opts.replicationFactor(config.replication_factor)
 
     opts.deviceIterations(config.batches_per_step)
-    opts.anchorMode(poptorch.AnchorMode.Sum)
+    #opts.anchorMode(poptorch.AnchorMode.Sum)
     
     opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
     
