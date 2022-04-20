@@ -4,7 +4,7 @@ from ipu_options import get_options
 import poptorch
 import torch
 from transformers import BartForConditionalGeneration
-from generic_inference_model import ModelWrapper, Config
+from generic_inference_model import  Config
 
 class BartPopEncoder(torch.nn.Module):
     def __init__(self, model):
@@ -30,7 +30,5 @@ def create(checkpoint):
     options = get_options(config)
     wrapped_encoder = BartPopEncoder(bart_model.get_encoder())
     wrapped_encoder_model = poptorch.inferenceModel(wrapped_encoder, options)
-    #wrapped_encoder.eval()
-    #wrapped_encoder_model.compile(torch.zeros(4,512,dtype=torch.int32),torch.zeros(4,512,dtype=torch.int32))
 
     return wrapped_encoder_model

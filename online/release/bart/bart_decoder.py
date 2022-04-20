@@ -3,7 +3,7 @@ from ipu_options import get_options
 import poptorch
 import torch
 from transformers import BartForConditionalGeneration
-from generic_inference_model import ModelWrapper, Config
+from generic_inference_model import Config
 
 class BartPopDecoder(torch.nn.Module):
     def __init__(self, model, lm_head):

@@ -54,10 +54,27 @@ class BartInterfaceWrapper:
     def _create_decoder(self, checkpoint):
         return bart_decoder.create(checkpoint)
 
+    def _build_model(self, sequence_length:int=384, batch_size:int=4, output_length:int = 32):
+        # Encoder Inputs
+        input_ids = torch.zeros((batch_size, sequence_length)).to(torch.int64)
+        attention_mask = torch.zeros((batch_size, sequence_length)).to(torch.int64)
+
+        # Decoder Inputs
+        decoder_ids = torch.zeros(batch_size, output_length).to(torch.int64)
+        dynamic_mask = torch.zeros(batch_size, output_length).to(torch.int64)
+
+        encoder_result = self.encoder(input_ids, attention_mask)
+
+        decoder_result = self.decoder(decoder_ids, 
+                attention_mask=dynamic_mask,
+                encoder_attention_mask=attention_mask, 
+                encoder_hidden_states=encoder_result)
+
     # TODO : Create multiple decoders per encoder for better performance
     def create_ipu(self, options):
         self.encoder = self._create_encoder(options.model_path)
         self.decoder = self._create_decoder(options.model_path)
+        self._build_model()
         print("Bart Model Running")
 
     def run_data(self, input, callback):
@@ -70,29 +87,25 @@ class BartInterfaceWrapper:
         batch_size = self.options.batch_size
         output_length = self.options.output_length
 
-        decoder_ids = torch.zeros(batch_size, output_length).to(torch.int64)
         encoder_result = encoder_result.expand(batch_size,encoder_result.shape[1],encoder_result.shape[2])
         attention_mask = attention_mask.expand(batch_size,attention_mask.shape[1])
 
         dynamic_mask = torch.zeros(batch_size, output_length).to(torch.int64)
+        decoder_ids = torch.zeros(batch_size, output_length).to(torch.int64)
 
         decoder_ids[:,0] = 2
         dynamic_mask[:,0] = 1
         beam_scores = torch.zeros(batch_size,)
 
-        #print("Running Decoder")
         for i in range(1,output_length):
             tic = time.time()
             decoder_result = self.decoder(decoder_ids, 
                 attention_mask=dynamic_mask,
                 encoder_attention_mask=attention_mask, 
                 encoder_hidden_states=encoder_result)
-            #print("D", time.time() - tic)
             tic = time.time()
             decoder_ids, beam_scores = beam_search(i, decoder_ids, decoder_result, beam_scores, i == 1)
-            #print("BB", time.time() - tic)
             dynamic_mask[:,i] = 1
-        #print("Finished Decoder")
 
         callback(decoder_ids) 
 
