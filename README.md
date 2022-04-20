@@ -21,6 +21,8 @@ The server side can be run using docker compose.
 
 ## Online Startup
 
+1. Custom ops for bert needs to be compiled : online/release/bert : `make`
+
 The online models are registered with the server through the ZMQ message queue and can be run : 
 1. run `python3 release_proto.py run --config server` from online/release folder
 
