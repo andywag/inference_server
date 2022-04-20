@@ -30,8 +30,8 @@ class BartOutput:
         return BartOutput(data.tolist())
 
 class BartApi(BasicFastApi):        
-    def __init__(self, proto):
-        super().__init__(proto, 'bart')
+    def __init__(self, proto, host):
+        super().__init__(proto, host, 'bart')
         self.input_type = Bart
         self.output_type = BartResponse
         self.tokenizer = BartTokenizerFast.from_pretrained("ainize/bart-base-cnn")
@@ -98,5 +98,5 @@ class BartProto(ModelProto):
         model = BartInterfaceWrapper()
         return model
 
-    def get_fast_apis(self):
-        return [BartApi(self)]
+    def get_fast_apis(self, host):
+        return [BartApi(self, host)]

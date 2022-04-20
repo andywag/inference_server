@@ -20,8 +20,8 @@ import time
 
 
 class GPT2Api(BasicFastApi):        
-    def __init__(self, proto):
-        super().__init__(proto, 'gpt')
+    def __init__(self, proto, host):
+        super().__init__(proto, host, 'gpt')
         self.input_type = GPT2
         self.output_type = GPT2Response
         self.tokenizer = GPT2TokenizerFast.from_pretrained('gpt2')
@@ -102,8 +102,8 @@ class GPT2Proto(ModelProto):
         model = GPT2TritonWrapper() 
         return model
 
-    def get_fast_apis(self):
-        return [GPT2Api(self)]
+    def get_fast_apis(self, host):
+        return [GPT2Api(self, host)]
     
 
 

@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from model_proto import ModelProto
 from project_proto import ProjectProto
 
-from general_client import GeneralClient
 from typing import TypeVar
 import time
 
@@ -19,27 +18,30 @@ import json
 
 class BasicFastApi:
     
-    def __init__(self, proto:ModelProto, path:str):
+    def __init__(self, proto:ModelProto, host:str, path:str):
         self.path = path
         self.proto = proto
         
-        #self.client = GeneralClient(self.proto)
-        #self.grpc_client = grpcclient.InferenceServerClient("localhost:8001")
 
-        #self.inputs, self.outputs = self.client.inputs, self.client.outputs
-
-        self.rabbit_queue = RabbitRunQueue(proto.name)
+        self.rabbit_queue = RabbitRunQueue(proto.name, host)
 
     def run_rabbit(self, model_input):
         tic = time.time()
+        # Create a queue to hold the output
         data_queue = queue.Queue()
         def callback(result):
             data_queue.put(result)
+        
+        # Create the rabbit input and convert it to json to put into rabbit message queue
         model_input, state = self.create_rabbit_input(model_input)
         model_input_dict = dataclasses.asdict(model_input)
         model_input_json = json.dumps(model_input_dict)
+
+        # Send the message to a rabbit message queue
         # FIXME : time Hack for UUID
         self.rabbit_queue.post_message(model_input_json, str(time.time()), callback)
+
+        # Handle the output of the model which is attached to the message queue
         result = data_queue.get()
         result_dict = json.loads(result)
         result = self.handle_rabbit_output(result_dict, state, tic)
@@ -47,27 +49,18 @@ class BasicFastApi:
         return result
 
 
-    def run(self, model_input):
-        tic = time.time()
-        state = self.create_input(model_input, self.inputs)
-        response = self.grpc_client.infer(self.proto.name,
-                        self.inputs,
-                        request_id=str(0),
-                        outputs=self.outputs)
-        internal_result = self.handle_output(response, state, tic)
-        return dataclasses.asdict(internal_result)
-         
-
     def get_api(self):
         return self
 
-
-
-    def create_input(self, model_input, client_input):
+    def create_rabbit_input(self, model_input):
+        """ Method which converts the input from FAST API to the model input """
         raise NotImplementedError("")
 
-    def handle_output(self, response, state, tic):
+    def handle_rabbit_output(self, response, state, tic:int):
+        """ Method to convert the output of the model back to the general interface """
         raise NotImplementedError("")
+
+
 
 def create_rabbit_queues(prototype):
     queue_map = dict()

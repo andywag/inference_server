@@ -9,6 +9,9 @@ Both modes consist of a "server" which is running the server side functionallity
 consists of FastAPI, RabbitMQ, Celery, and MongoDB. The models can be run on any device containing
 an IPU and attaches to the server using the Rabbit Message Queue.  
 
+## Configuration 
+This solution requires rabbitMQ and MongoDB to be running. The IP address is required so that devices can be registered. 
+1. Put IP Address of host into online/release/config.yaml
 
 ## Server Startup
 The server side can be run using docker compose. 
@@ -17,6 +20,8 @@ The server side can be run using docker compose.
 2. docker-compose up
 
 ## Online Startup
+
+1. Custom ops for bert needs to be compiled : online/release/bert : `make`
 
 The online models are registered with the server through the ZMQ message queue and can be run : 
 1. run `python3 release_proto.py run --config server` from online/release folder

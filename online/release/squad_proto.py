@@ -23,8 +23,8 @@ class SquadApi(BasicFastApi):
     input_type = Squad
     output_type = SquadResponse 
     path = '/squad'      
-    def __init__(self, proto):
-        super().__init__(proto, 'squad')
+    def __init__(self, proto, host):
+        super().__init__(proto, host, 'squad')
         self.input_type = Squad
         self.output_type = SquadResponse
         self.tokenizer = BertTokenizerFast.from_pretrained("bert-large-uncased")
@@ -86,8 +86,8 @@ class SquadProto(ModelProto):
             ner=False)
         return model
 
-    def get_fast_apis(self):
-        return [SquadApi(self)]
+    def get_fast_apis(self, host):
+        return [SquadApi(self, host)]
 
 
 
