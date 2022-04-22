@@ -41,7 +41,7 @@ def training_options(opts, ipu_options):
     opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
     opts.Precision.enableStochasticRounding(True)
     opts.autoRoundNumIPUs(True)
-    opts.anchorMode(poptorch.AnchorMode.Sum)
+    #opts.anchorMode(poptorch.AnchorMode.Sum)
     # PopART options
     opts._Popart.set("disableGradAccumulationTensorStreams", True)
 
