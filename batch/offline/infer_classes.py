@@ -19,7 +19,6 @@ import pickle
 import torch
 
 
-
 class Base:
     def __init__(self, inference_config:InferDescription):
         self.inference_config = inference_config

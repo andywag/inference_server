@@ -26,6 +26,8 @@ from .bert_fused_attention import BertFusedSelfAttention
 import os
 import ctypes
 
+from .bert_gc_mixin import BertMixIn
+
 def logger(msg):
     logging.info(msg)
 
@@ -118,7 +120,7 @@ def accuracy_masked(out, targ, mask_val):
     return (out.argmax(dim=-1) == targ).float().mul(mask).div(num_unmasked).sum(1).mean()
 
 
-class PipelinedBertForPretraining(transformers.BertForMaskedLM):
+class PipelinedBertForPretraining(transformers.BertForMaskedLM, BertMixIn):
     def __init__(self, config):
         super().__init__(config)
         self.gather_indices = OnehotGather()
@@ -177,25 +179,16 @@ class PipelinedBertForPretraining(transformers.BertForMaskedLM):
             "attention_mask": attention_mask
         }
 
-        #print("A", input_ids[0])
-        #print("B", attention_mask[0])
-        #print("D", masked_lm_positions[0])
+       
 
         outputs = self.bert(**inputs)
         sequence_output = outputs[0]
-        #sequence_output = outputs[0]
 
-        #print("CC", sequence_output[0])
         # Select only the masked tokens for the classifier
         masked_output = self.gather_indices(sequence_output, masked_lm_positions)
         
         prediction_scores = self.cls(masked_output)
-        #print("DDD", prediction_scores.shape)
-        #scores = torch.topk(prediction_scores, 5, axis=-1)
-        #print("C", masked_output)
-        #print("D", prediction_scores)
-        #print("E", self.cls.predictions.decoder.weight)
-        #print("F", self.cls.predictions.bias)
+        
 
         scores = prediction_scores
         #prediction_scores = self.cls(masked_output)
@@ -209,29 +202,14 @@ class PipelinedBertForPretraining(transformers.BertForMaskedLM):
         else:
             #
             masked_lm_acc = None
-            #print("Positions", masked_lm_positions[0])
-            #print("Labels", masked_lm_labels[0])
-            #print("Scores", scores[0])
+            
             if masked_lm_labels is not None:
                 scores = torch.topk(prediction_scores, 5, axis=-1)
                 masked_lm_acc = accuracy_masked(prediction_scores.view([-1, masked_lm_labels.shape[1], self.config.vocab_size]), masked_lm_labels, 0)
             #    print("B", masked_lm_acc)
             return scores, masked_lm_acc
        
-    @classmethod
-    def from_pretrained(cls, *args, **kwargs):
-        # Prevent word_embedding serialization when loading from pretrained so weights are loaded
-        embedding_serialization = 1
-        if kwargs.get("config"):
-            embedding_serialization = kwargs["config"].embedding_serialization_factor
-            kwargs["config"].embedding_serialization_factor = 1
-        model = super().from_pretrained(*args, **kwargs)
 
-        # Apply serialization afterwards
-        if embedding_serialization > 1:
-            model.bert.embeddings.word_embeddings = SerializedEmbedding(model.bert.embeddings.word_embeddings,
-                                                                        embedding_serialization)
-        return model
 
 
 class SerializedEmbedding(nn.Module):
@@ -273,29 +251,13 @@ class SerializedEmbedding(nn.Module):
         return x_sum
 
 
-class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassification):
+class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassification, BertMixIn):
     def __init__(self, config):
         super().__init__(config)
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
+        self.setup_layers(self.config, layer_ipu)
 
-        logger("-------------------- Device Allocation --------------------")
-        logger("Embedding  --> IPU 0")
-        if self.config.embedding_serialization_factor > 1:
-            self.bert.embeddings.word_embeddings = SerializedEmbedding(self.bert.embeddings.word_embeddings,
-                                                                       self.config.embedding_serialization_factor)
-        self.bert.embeddings = poptorch.BeginBlock(self.bert.embeddings, "Embedding", ipu_id=0)
-
-        for index, layer in enumerate(self.bert.encoder.layer):
-            ipu = layer_ipu[index]
-            if self.config.recompute_checkpoint_every_layer and index != config.num_hidden_layers - 1:
-                layer = recomputation_checkpoint(layer)
-            self.bert.encoder.layer[index] = poptorch.BeginBlock(layer, f"Encoder{index}", ipu_id=ipu)
-            logger(f"Encoder {index:<2} --> IPU {ipu}")
-
-        logger(f"Logits --> IPU {ipu}")
-        self.classifier = poptorch.BeginBlock(self.classifier, "Classifier", ipu_id=ipu)
-        logger("-----------------------------------------------------------")
-
+       
     def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
         inputs = {
             "input_ids": input_ids,
@@ -311,54 +273,15 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
             indices = torch.argmax(output.logits,dim=-1)
             return output.logits, indices
 
-    @classmethod
-    def from_pretrained(cls, *args, **kwargs):
-        # Prevent word_embedding serialization when loading from pretrained so weights are loaded
-        embedding_serialization = 1
-        if kwargs.get("config"):
-            embedding_serialization = kwargs["config"].embedding_serialization_factor
-            kwargs["config"].embedding_serialization_factor = 1
-        model = super().from_pretrained(*args, **kwargs)
+    
 
-        # Apply serialization afterwards
-        if embedding_serialization > 1:
-            model.bert.embeddings.word_embeddings = SerializedEmbedding(model.bert.embeddings.word_embeddings,
-                                                                        embedding_serialization)
-        return model
-
-    def save_pretrained(self, *args, **kwargs):
-        # Unwrap the SerializedEmbedding layer before saving then wrap again
-        if self.config.embedding_serialization_factor > 1:
-            serialized = self.bert.embedding.word_embeddings
-            deserialized = nn.Embedding.from_pretrained(torch.stack([l.weight for l in serialized.split_embeddings]), padding_idx=0)
-            self.bert.embeddings.word_embeddings = deserialized
-            super().save_pretrained(*args, **kwargs)
-            self.bert.embeddings.word_embeddings = serialized
-        else:
-            super().save_pretrained(*args, **kwargs)
-
-class PipelinedBertForTokenClassification(transformers.BertForTokenClassification):
+class PipelinedBertForTokenClassification(transformers.BertForTokenClassification, BertMixIn):
     def __init__(self, config):
         super().__init__(config)
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
+        self.setup_layers(self.config, layer_ipu)
 
-        logger("-------------------- Device Allocation --------------------")
-        logger("Embedding  --> IPU 0")
-        if self.config.embedding_serialization_factor > 1:
-            self.bert.embeddings.word_embeddings = SerializedEmbedding(self.bert.embeddings.word_embeddings,
-                                                                       self.config.embedding_serialization_factor)
-        self.bert.embeddings = poptorch.BeginBlock(self.bert.embeddings, "Embedding", ipu_id=0)
-
-        for index, layer in enumerate(self.bert.encoder.layer):
-            ipu = layer_ipu[index]
-            if self.config.recompute_checkpoint_every_layer and index != config.num_hidden_layers - 1:
-                layer = recomputation_checkpoint(layer)
-            self.bert.encoder.layer[index] = poptorch.BeginBlock(layer, f"Encoder{index}", ipu_id=ipu)
-            logger(f"Encoder {index:<2} --> IPU {ipu}")
-
-        logger(f"Logits --> IPU {ipu}")
-        self.classifier = poptorch.BeginBlock(self.classifier, "Classifier", ipu_id=ipu)
-        logger("-----------------------------------------------------------")
+       
 
     def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
         inputs = {
@@ -377,56 +300,16 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
             indices = torch.argmax(output.logits,dim=-1)
             return output.logits, indices
 
-    @classmethod
-    def from_pretrained(cls, *args, **kwargs):
-        # Prevent word_embedding serialization when loading from pretrained so weights are loaded
-        embedding_serialization = 1
-        if kwargs.get("config"):
-            embedding_serialization = kwargs["config"].embedding_serialization_factor
-            kwargs["config"].embedding_serialization_factor = 1
-        model = super().from_pretrained(*args, **kwargs)
-
-        # Apply serialization afterwards
-        if embedding_serialization > 1:
-            model.bert.embeddings.word_embeddings = SerializedEmbedding(model.bert.embeddings.word_embeddings,
-                                                                        embedding_serialization)
-        return model
-
-    def save_pretrained(self, *args, **kwargs):
-        # Unwrap the SerializedEmbedding layer before saving then wrap again
-        if self.config.embedding_serialization_factor > 1:
-            serialized = self.bert.embedding.word_embeddings
-            deserialized = nn.Embedding.from_pretrained(torch.stack([l.weight for l in serialized.split_embeddings]), padding_idx=0)
-            self.bert.embeddings.word_embeddings = deserialized
-            super().save_pretrained(*args, **kwargs)
-            self.bert.embeddings.word_embeddings = serialized
-        else:
-            super().save_pretrained(*args, **kwargs)
+   
 
 
-class PipelinedBertForQuestionAnswering(transformers.BertForQuestionAnswering):
+class PipelinedBertForQuestionAnswering(transformers.BertForQuestionAnswering, BertMixIn):
     def __init__(self, config):
         super().__init__(config)
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
+        self.setup_layers(self.config, layer_ipu)
 
-        logger("-------------------- Device Allocation --------------------")
-        logger("Embedding  --> IPU 0")
-        if self.config.embedding_serialization_factor > 1:
-            self.bert.embeddings.word_embeddings = SerializedEmbedding(self.bert.embeddings.word_embeddings,
-                                                                       self.config.embedding_serialization_factor)
-        self.bert.embeddings = poptorch.BeginBlock(self.bert.embeddings, "Embedding", ipu_id=0)
-
-        for index, layer in enumerate(self.bert.encoder.layer):
-            ipu = layer_ipu[index]
-            if self.config.recompute_checkpoint_every_layer and index != config.num_hidden_layers - 1:
-                layer = recomputation_checkpoint(layer)
-            self.bert.encoder.layer[index] = poptorch.BeginBlock(layer, f"Encoder{index}", ipu_id=ipu)
-            logger(f"Encoder {index:<2} --> IPU {ipu}")
-
-        logger(f"QA Outputs --> IPU {ipu}")
-        self.qa_outputs = poptorch.BeginBlock(self.qa_outputs, "QA Outputs", ipu_id=ipu)
-        logger("-----------------------------------------------------------")
-
+       
     def forward(self, input_ids, attention_mask, token_type_ids, start_positions=None, end_positions=None):
         inputs = {
             "input_ids": input_ids,
@@ -442,28 +325,4 @@ class PipelinedBertForQuestionAnswering(transformers.BertForQuestionAnswering):
         else:
             return output.start_logits, output.end_logits
 
-    @classmethod
-    def from_pretrained(cls, *args, **kwargs):
-        # Prevent word_embedding serialization when loading from pretrained so weights are loaded
-        embedding_serialization = 1
-        if kwargs.get("config"):
-            embedding_serialization = kwargs["config"].embedding_serialization_factor
-            kwargs["config"].embedding_serialization_factor = 1
-        model = super().from_pretrained(*args, **kwargs)
-
-        # Apply serialization afterwards
-        if embedding_serialization > 1:
-            model.bert.embeddings.word_embeddings = SerializedEmbedding(model.bert.embeddings.word_embeddings,
-                                                                        embedding_serialization)
-        return model
-
-    def save_pretrained(self, *args, **kwargs):
-        # Unwrap the SerializedEmbedding layer before saving then wrap again
-        if self.config.embedding_serialization_factor > 1:
-            serialized = self.bert.embedding.word_embeddings
-            deserialized = nn.Embedding.from_pretrained(torch.stack([l.weight for l in serialized.split_embeddings]), padding_idx=0)
-            self.bert.embeddings.word_embeddings = deserialized
-            super().save_pretrained(*args, **kwargs)
-            self.bert.embeddings.word_embeddings = serialized
-        else:
-            super().save_pretrained(*args, **kwargs)
+   
