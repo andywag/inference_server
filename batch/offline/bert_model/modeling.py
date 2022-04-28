@@ -28,6 +28,8 @@ import ctypes
 
 from .bert_gc_mixin import BertMixIn
 
+import forge as f
+
 def logger(msg):
     logging.info(msg)
 
@@ -173,15 +175,15 @@ class PipelinedBertForPretraining(transformers.BertForMaskedLM, BertMixIn):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
-    def forward(self, input_ids, attention_mask, token_type_ids, masked_lm_positions, masked_lm_labels=None):
-        inputs = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask
-        }
+    @f.sign(f.self, f.arg('input_ids'), f.arg('attention_mask'), f.arg('token_type_ids'), f.arg('masked_lm_positions', default=None),f.arg('masked_lm_labels', default=None))
+    def forward(self, **kwargs):
+        
+        masked_lm_positions = kwargs['masked_lm_positions']
+        masked_lm_labels = kwargs['masked_lm_labels']
+        del kwargs['masked_lm_positions']
+        del kwargs['masked_lm_labels']
 
-       
-
-        outputs = self.bert(**inputs)
+        outputs = self.bert(**kwargs)
         sequence_output = outputs[0]
 
         # Select only the masked tokens for the classifier
@@ -257,15 +259,10 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
         self.setup_layers(self.config, layer_ipu)
 
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('token_type_ids'),f.arg('labels', default=None))
+    def forward(self, **kwargs):
+        output = super().forward(**kwargs)
        
-    def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
-        inputs = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-            "labels": labels
-        }
-        output = super().forward(**inputs)
         if self.training:
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.logits
@@ -282,17 +279,9 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
         self.setup_layers(self.config, layer_ipu)
 
        
-
-    def forward(self, input_ids, attention_mask, token_type_ids, labels=None):
-        inputs = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-            "labels":labels
-        }
-        print("A", input_ids)
-        print("B", labels)
-        output = super().forward(**inputs)
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('token_type_ids'),f.arg('labels', default=None))
+    def forward(self, **kwargs):
+        output = super().forward(**kwargs)
         if self.training:
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.logits
@@ -309,16 +298,9 @@ class PipelinedBertForQuestionAnswering(transformers.BertForQuestionAnswering, B
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
         self.setup_layers(self.config, layer_ipu)
 
-       
-    def forward(self, input_ids, attention_mask, token_type_ids, start_positions=None, end_positions=None):
-        inputs = {
-            "input_ids": input_ids,
-            "attention_mask": attention_mask,
-            "token_type_ids": token_type_ids,
-            "start_positions": start_positions,
-            "end_positions": end_positions
-        }
-        output = super().forward(**inputs)
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('token_type_ids'),f.arg('start_positions', default=None),f.arg('end_positions', default=None))
+    def forward(self, **kwargs):
+        output = super().forward(**kwargs)
         if self.training:
             final_loss = poptorch.identity_loss(output.loss, reduction="none")
             return final_loss, output.start_logits, output.end_logits
