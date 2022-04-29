@@ -259,13 +259,12 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
         layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
         self.setup_layers(self.config, layer_ipu)
 
-    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('token_type_ids'),f.arg('labels', default=None))
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('labels', default=None))
     def forward(self, **kwargs):
         output = super().forward(**kwargs)
        
         if self.training:
-            final_loss = poptorch.identity_loss(output.loss, reduction="none")
-            return final_loss, output.logits
+            return output.loss, output.logits
         else:
             indices = torch.argmax(output.logits,dim=-1)
             return output.logits, indices
@@ -279,12 +278,11 @@ class PipelinedBertForTokenClassification(transformers.BertForTokenClassificatio
         self.setup_layers(self.config, layer_ipu)
 
        
-    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('token_type_ids'),f.arg('labels', default=None))
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('labels', default=None))
     def forward(self, **kwargs):
         output = super().forward(**kwargs)
         if self.training:
-            final_loss = poptorch.identity_loss(output.loss, reduction="none")
-            return final_loss, output.logits
+            return output.loss, output.logits
         else:
             indices = torch.argmax(output.logits,dim=-1)
             return output.logits, indices
@@ -302,8 +300,7 @@ class PipelinedBertForQuestionAnswering(transformers.BertForQuestionAnswering, B
     def forward(self, **kwargs):
         output = super().forward(**kwargs)
         if self.training:
-            final_loss = poptorch.identity_loss(output.loss, reduction="none")
-            return final_loss, output.start_logits, output.end_logits
+            return output.loss, output.start_logits, output.end_logits
         else:
             return output.start_logits, output.end_logits
 

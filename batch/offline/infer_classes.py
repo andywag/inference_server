@@ -89,9 +89,9 @@ class Sequence(Base):
 
     def model_inputs(self, data):
         if not self.train:
-            return [data['input_ids'], data['attention_mask'], data['token_type_ids']]
+            return [data['input_ids'], data['attention_mask']]
         else:
-            return [data['input_ids'], data['attention_mask'], data['token_type_ids'],  data['label']]
+            return [data['input_ids'], data['attention_mask'],  data['label']]
 
     def handle_result(self, result, data):
         #super().handle_result(result,data)
@@ -139,9 +139,9 @@ class Token(Base):
 
     def model_inputs(self, data):
         if not self.train:
-            return [data['input_ids'], data['attention_mask'], data['token_type_ids']]
+            return [data['input_ids'], data['attention_mask']]
         else:
-            return [data['input_ids'], data['attention_mask'], data['token_type_ids'],  data['label']]
+            return [data['input_ids'], data['attention_mask'],  data['label']]
 
     def tokenize(self, tokenizer, dataset):
         if self.train:

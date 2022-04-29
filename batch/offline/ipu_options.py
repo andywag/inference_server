@@ -38,7 +38,7 @@ def constant_options(opts):
 
 
 def training_options(opts, ipu_options):
-    opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
+    #opts.setExecutionStrategy(poptorch.PipelinedExecution(poptorch.AutoStage.AutoIncrement))
     opts.Precision.enableStochasticRounding(True)
     opts.autoRoundNumIPUs(True)
     #opts.anchorMode(poptorch.AnchorMode.Sum)
