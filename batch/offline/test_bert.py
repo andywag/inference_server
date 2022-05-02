@@ -41,7 +41,6 @@ def create_config(train):
     config.recompute_checkpoint_every_layer=False
     config.problem_type = 'multi_label_classification'
 
-    handle_custom_ops(config)
 
 
     return config
