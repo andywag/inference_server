@@ -54,7 +54,11 @@ class BartInterfaceWrapper:
     def _create_decoder(self, checkpoint):
         return bart_decoder.create(checkpoint)
 
+<<<<<<< Updated upstream
     def _build_model(self, sequence_length:int=384, batch_size:int=4, output_length:int = 32):
+=======
+    def _build_model(self, sequence_length:int=384, batch_size:int=1, output_length:int = 32):
+>>>>>>> Stashed changes
         # Encoder Inputs
         input_ids = torch.zeros((batch_size, sequence_length)).to(torch.int64)
         attention_mask = torch.zeros((batch_size, sequence_length)).to(torch.int64)
@@ -77,15 +81,17 @@ class BartInterfaceWrapper:
         self._build_model()
         print("Bart Model Running")
 
+    
+
     def run_data(self, input, callback):
         tic = time.time()
-        input_ids = torch.from_numpy(input[0])
-        attention_mask = torch.from_numpy(input[1])
+        #input_ids = torch.from_numpy(input[0])
+        #attention_mask = torch.from_numpy(input[1])
 
-        encoder_result = self.encoder(input_ids, attention_mask)
+        #encoder_result = self.encoder(input_ids, attention_mask)
 
-        batch_size = self.options.batch_size
-        output_length = self.options.output_length
+        #batch_size = self.options.batch_size
+        #output_length = self.options.output_length
 
         encoder_result = encoder_result.expand(batch_size,encoder_result.shape[1],encoder_result.shape[2])
         attention_mask = attention_mask.expand(batch_size,attention_mask.shape[1])

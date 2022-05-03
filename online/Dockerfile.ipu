@@ -1,0 +1,7 @@
+FROM graphcore/poplar
+
+MKDIR /etc/ipuof.conf.d
+COPY /home/andyw/.ipuof.conf.d /etc/ipuof.conf.d
+
+
+

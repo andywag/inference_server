@@ -41,6 +41,7 @@ class Classifier:
 @dataclass
 class InferDescription:
     name:str=''
+    model_type:str='BERT'
     dataset:str='imdb'
     tokenizer:str='bert-base-uncased'
     model:str='bert-base-uncased'

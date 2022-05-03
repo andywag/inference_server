@@ -15,6 +15,10 @@ server: &server
   <<: *defaults
   enabled: [ner, bart, gpt2]
   
+lite: &lite
+  <<: *defaults
+  enabled: [ner, gpt2]
+
 squad: &squad
   <<: *defaults
   enabled: [squad, ner]
