@@ -24,6 +24,7 @@ class InferConfig:
     def create_model_description(self):
         infer_description = InferDescription()
         infer_description.name = self.name
+        infer_description.model_type = self.model_type
         infer_description.tokenizer = self.tokenizer
         infer_description.checkpoint = self.checkpoint
         infer_description.dataset = self.dataset
