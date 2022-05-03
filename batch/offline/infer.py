@@ -30,16 +30,16 @@ import tempfile
 import logging
 logger = logging.getLogger(__name__)
 
-def handle_custom_ops(config):
-    file_dir = os.path.dirname(os.path.realpath(__file__))
-    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
-    if os.path.exists(CUSTOM_OP_PATH):
-        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
-        ops_and_patterns.setVocabSize(config.vocab_size)
-        ops_and_patterns.setEmbeddingSize(config.hidden_size)
-        ops_and_patterns.setHiddenSize(config.hidden_size)
-    else:
-        exit()
+#def handle_custom_ops(config):
+#    file_dir = os.path.dirname(os.path.realpath(__file__))
+#    CUSTOM_OP_PATH = os.path.join(file_dir, "custom_ops.so")
+#    if os.path.exists(CUSTOM_OP_PATH):
+#        ops_and_patterns = ctypes.cdll.LoadLibrary(CUSTOM_OP_PATH)
+#        ops_and_patterns.setVocabSize(config.vocab_size)
+#        ops_and_patterns.setEmbeddingSize(config.hidden_size)
+#        ops_and_patterns.setHiddenSize(config.hidden_size)
+#    else:
+#        exit()
 
 def create_dataset(dataset, model_class:Base, options, train:bool=False):
     """ Function to create a dataset loader. Assumes a hugging face dataset with column containing [text, optional(label)] """
@@ -200,7 +200,7 @@ def main(inference_config:InferDescription, train:bool, mongo, celery):
             return
 
         if train:
-            samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step *inference_config.ipu.gradient_accumulation
+            samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step*inference_config.ipu.gradient_accumulation
         else:
             samples += inference_config.detail.batch_size*inference_config.ipu.batches_per_step 
 

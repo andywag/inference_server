@@ -114,8 +114,9 @@ class Sequence(Base):
         import pickle
         count = 0
         if self.train:
-            with open('save.pik','wb') as fp:
-                pickle.dump({'result':self.result_store,'label':self.label_store}, fp)
+            pass
+            #with open('save.pik','wb') as fp:
+            #    pickle.dump({'result':self.result_store,'label':self.label_store}, fp)
         else:
             for x in range(len(self.result_store)):
                 result = self.result_store[x]
