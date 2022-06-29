@@ -26,7 +26,7 @@ from .bert_fused_attention import BertFusedSelfAttention
 import os
 import ctypes
 
-from .bert_gc_mixin import BertMixIn
+from .bert_gc_mixin import BertMixIn, BertSentenceMixIn
 
 import forge as f
 
@@ -252,6 +252,28 @@ class SerializedEmbedding(nn.Module):
                 x_sum = x
         return x_sum
 
+
+class PipelinedBertForSentenceEmbedding(transformers.BertModel, BertSentenceMixIn):
+    def __init__(self, config):
+        super().__init__(config)
+        layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
+        self.setup_layers(self.config, layer_ipu)
+
+    def mean_pooling(self, model_output, attention_mask):
+        token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+        return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'))
+    def forward(self, **kwargs):
+        output = super().forward(**kwargs)
+        return self.mean_pooling(output,kwargs['attention_mask'])
+        #if self.training:
+        #    return output.loss, output.logits
+        #else:
+        #    indices = torch.argmax(output.logits,dim=-1)
+        #    return output.logits, indices
 
 class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassification, BertMixIn):
     def __init__(self, config):

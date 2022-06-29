@@ -42,13 +42,14 @@ class Base:
         config.embedding_serialization_factor=self.inference_config.ipu.embedding_serialization_factor
         config.num_labels = self.inference_config.classifier.num_labels
         if train:
-            config.layers_per_ipu = self.inference_config.ipu.layers_per_ipu
             config.recompute_checkpoint_every_layer=True
-            self.inference_config.detail.batch_size=4
+            config.layers_per_ipu = [0,4,4,4]
+            config.matmul_proportion = [0.25,0.25,0.25,0.25]
+            if self.inference_config.model_type == 'BERT':
+                self.inference_config.detail.batch_size=2
         else:
             config.layers_per_ipu = [24]
         config.recompute_checkpoint_every_layer=False
-        #config.problem_type = "single_label_classification"
         handle_custom_ops(config)
 
 
