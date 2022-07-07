@@ -8,6 +8,7 @@ from squad_proto import SquadProto
 from ner_proto import NerProto
 from gpt2_proto import GPT2Proto
 from bart_proto import BartProto
+from dalli_proto import DalliProto
 
 import argparse
 import yaml
@@ -25,7 +26,8 @@ models_map = {
     'squad' : SquadProto(),
     'bart': BartProto(),
     'ner' : NerProto(),
-    'gpt2' : GPT2Proto()
+    'gpt2' : GPT2Proto(),
+    'dalli' : DalliProto()
 }
 
 def run(args):

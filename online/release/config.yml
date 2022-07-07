@@ -13,11 +13,11 @@ defaults: &defaults
 
 server: &server
   <<: *defaults
-  enabled: [ner, bart, gpt2]
+  enabled: [ner, bart, gpt2, dalli]
   
 lite: &lite
   <<: *defaults
-  enabled: [ner, gpt2]
+  enabled: [ner, dalli]
 
 squad: &squad
   <<: *defaults

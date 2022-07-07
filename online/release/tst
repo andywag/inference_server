@@ -1,0 +1,52 @@
+[bert_inference.py:311] Initialising from Torch checkpoint: ner_large_model.bin
+[device.py:135] Acquired device: Device Type:ipu Connection Type:always Id:0 Version:1.0.52 NumIPUs:1 NumTilesPerIPU:1472 DeviceIds: {0}
+[bert_inference.py:207] Compiled. Duration 4.016111612319946 seconds
+[connection_workflow.py:179] Pika version 1.2.0 connecting to ('192.168.3.114', 5672)
+[io_services_utils.py:345] Socket connected: <socket.socket fd=24, family=AddressFamily.AF_INET, type=2049, proto=6, laddr=('192.168.3.114', 45370), raddr=('192.168.3.114', 5672)>
+[connection_workflow.py:428] Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>).
+[connection_workflow.py:293] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[connection_workflow.py:725] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[blocking_connection.py:454] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[blocking_connection.py:1246] Created channel=1
+[connection_workflow.py:179] Pika version 1.2.0 connecting to ('192.168.3.114', 5672)
+[io_services_utils.py:345] Socket connected: <socket.socket fd=28, family=AddressFamily.AF_INET, type=2049, proto=6, laddr=('192.168.3.114', 45374), raddr=('192.168.3.114', 5672)>
+[connection_workflow.py:428] Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>).
+[connection_workflow.py:293] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[connection_workflow.py:725] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[blocking_connection.py:454] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
+[blocking_connection.py:1246] Created channel=1
+Loading Checkpoint /localdata/andyw/projects/inference_build/pytorch_checkpoints/ner_large_model.bin
+Bert Model NER
+Transfer Running
+Process Process-1:
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 93, in run
+    self._target(*self._args, **self._kwargs)
+  File "../model_proto/model_proto.py", line 61, in run_ipu
+    time.sleep(10)
+KeyboardInterrupt
+initializing MinDalleTorch
+reading files from min-dalle_int/pretrained/dalle_bart_mini
+initializing DalleBartEncoderTorch
+initializing DalleBartDecoderTorch
+initializing VQGanDetokenizer
+Min Dalle Running
+Process Process-2:
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 93, in run
+    self._target(*self._args, **self._kwargs)
+  File "../model_proto/model_proto.py", line 61, in run_ipu
+    time.sleep(10)
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "release_proto.py", line 50, in <module>
+    run(args)
+  File "release_proto.py", line 45, in run
+    project_proto.run_ipus(config)
+  File "../model_proto/project_proto.py", line 36, in run_ipus
+    time.sleep(10)
+KeyboardInterrupt

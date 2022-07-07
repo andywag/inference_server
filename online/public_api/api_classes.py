@@ -70,3 +70,13 @@ class Bart:
 class BartResponse:
     results:str
     server_time:float
+
+@dataclass
+class Dalli:
+    text:str
+    seed:int
+
+@dataclass
+class DalliResponse:
+    results:List[float]
+    
