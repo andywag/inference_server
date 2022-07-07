@@ -1,0 +1,14 @@
+**/__pycache__/
+**/.cache/
+**/*.pkl
+**/.DS*
+*.pt
+*.mlpackage
+**/*.ckpt
+.vscode
+**/.ipynb_checkpoints
+**/generated
+**/pretrained
+**/*.msgpack
+cache_dir/*
+generated.png
