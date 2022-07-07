@@ -60,7 +60,6 @@ class MinDalleTorch(MinDalleBase):
 
     def init_decoder(self):
         print("initializing DalleBartDecoderTorch")
-        print('A',self.config)
 
         if self.enable_ipu_decoder:
             decoder_class = DalleBartDecoderSplitTorch
@@ -86,26 +85,20 @@ class MinDalleTorch(MinDalleBase):
         else:
             self.decoder.load_state_dict(params, strict=False)
         del params
-        #if torch.cuda.is_available(): self.decoder = self.decoder.cuda()
-        #ipu_options = get_ipu_options()
-        #if self.enable_ipu_decoder:
-        #    self.ipu_decoder = poptorch.inferenceModel(self.decoder, ipu_options)
-
+       
     def init_detokenizer(self):
         print("initializing VQGanDetokenizer")
         self.detokenizer = VQGanDetokenizer()
         params = torch.load(self.detoker_params_path)
         self.detokenizer.load_state_dict(params)
         del params
-        if torch.cuda.is_available(): self.detokenizer = self.detokenizer.cuda()
             
 
     def generate_image_tokens(self, text: str, seed: int) -> LongTensor:
         text_tokens = self.tokenize_text(text)
         text_tokens = torch.tensor(text_tokens).to(torch.long)
-        if torch.cuda.is_available(): text_tokens = text_tokens.cuda()
 
-        if not self.is_reusable: self.init_encoder()
+        #if not self.is_reusable: self.init_encoder()
 
         if not self.enable_ipu_encoder:
             encoder_state = self.encoder(text_tokens)
@@ -133,6 +126,11 @@ class MinDalleTorch(MinDalleBase):
         if not self.is_reusable: del self.decoder
         return image_tokens
         
+    def generate_image_serve(self, text: str, seed: int) :
+        image_tokens = self.generate_image_tokens(text, seed)
+        print("detokenizing image")
+        image = self.detokenizer.forward(image_tokens).to(torch.uint8)
+        return image.to('cpu').detach().numpy()
 
     def generate_image(self, text: str, seed: int) -> Image.Image:
         image_tokens = self.generate_image_tokens(text, seed)
