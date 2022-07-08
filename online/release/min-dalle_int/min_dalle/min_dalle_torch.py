@@ -12,6 +12,7 @@ from .models.dalle_bart_decoder_torch import DalleBartDecoderTorch, DalleBartDec
 from .models.vqgan_detokenizer import VQGanDetokenizer
 import poptorch
 from .ipu_options import get_ipu_options
+import threading
 
 class MinDalleTorch(MinDalleBase):
     def __init__(
@@ -33,10 +34,13 @@ class MinDalleTorch(MinDalleBase):
         self.enable_ipu_decoder = True
 
 
-        if is_reusable:
-            self.init_encoder()
-            self.init_decoder()
-            self.init_detokenizer()
+        #if is_reusable:
+        self.init_encoder()
+        self.init_decoder()
+        self.init_detokenizer()
+
+        x = threading.Thread(target=self.generate_image_tokens, args=('avocado chair', 0))
+        x.start()
 
 
     def init_encoder(self):

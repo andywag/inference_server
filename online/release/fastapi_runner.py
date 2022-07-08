@@ -45,6 +45,9 @@ def run_gpt2(model_input:GPT2) -> GPT2Response:
 def run_bart(model_input:Bart) -> BartResponse:
     return api_dict['bart'].run_rabbit(model_input)
 
+@app.post("/dalli_rabbit")
+def run_bart(model_input:Dalli) -> DalliResponse:
+    return api_dict['dalli'].run_rabbit(model_input)
 
 app.add_middleware(
     CORSMiddleware,

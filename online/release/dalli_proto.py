@@ -18,7 +18,7 @@ import time
 
 class DalleApi(BasicFastApi):        
     def __init__(self, proto, host):
-        super().__init__(proto, host, 'dalle')
+        super().__init__(proto, host, 'dalli')
         self.input_type = Dalli
         self.output_type = DalliResponse
     
@@ -27,20 +27,21 @@ class DalleApi(BasicFastApi):
 
     def handle_rabbit_output(self, response, state, tic):
         image = response['result']
+        #print("KKKK", image)
+        #image = [[[1]]]
         return DalliResponse(image, time.time() - tic)
 
 @dataclass 
 class DalliInput:
-    input_ids:List[List[int]]
-    input_length:List[List[int]]
-    output_length:List[List[int]]
+    text:str
+    seed:int
 
     def items(self):
-        return [self.input_ids, self.input_length[0], self.output_length[0]]
+        return [self.text, self.seed]
 
 @dataclass
 class DalliOutput:
-    result:List[List[float]]
+    result:List[List[int]]
 
     @staticmethod
     def create(data:np.ndarray):

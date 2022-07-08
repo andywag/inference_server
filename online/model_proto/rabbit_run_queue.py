@@ -59,12 +59,12 @@ class RabbitRunQueue:
 
     def on_response(self, ch, method, props, body):
         if not props.type == 'my_heartbeat':
-            print("R", props.correlation_id, self.query_dict[props.correlation_id])
+            #print("R", props.correlation_id, self.query_dict[props.correlation_id])
             self.query_dict[props.correlation_id](body)
             del self.query_dict[props.correlation_id]
 
     def post_message(self, message_body:json, query_id:str, callback_fn):
-        print("Posting Message")
+        #print("Posting Message")
         self.query_dict[query_id] = callback_fn
         self.tx_channel.basic_publish(exchange='', 
             routing_key=self.queue_name, 

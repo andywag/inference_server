@@ -78,5 +78,6 @@ class Dalli:
 
 @dataclass
 class DalliResponse:
-    results:List[float]
+    results:List[List[List[int]]]
+    server_time:float
     

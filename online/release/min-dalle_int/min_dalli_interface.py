@@ -36,13 +36,15 @@ class MinDalleInterfaceWrapper:
     
 
     def run_data(self, input, callback):
+        print("Running Dali")
         tic = time.time()
         
         text = input[0]
         seed = input[1]
 
         image = self.model.generate_image_serve(text, seed)
-        callable(image)
+        print("Finished Dali")
+        callback(image)
 
        
 
