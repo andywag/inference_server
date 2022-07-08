@@ -9,6 +9,7 @@ import OnlineDescription from './OnlineDescription'
 import Bart from './Bart.js'
 import Batch from './Batch.js'
 import FineTop from './FineTop';
+import Dalli from './Dalli';
 
 import { BrowserRouter, Router, Route, Routes, Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
@@ -49,6 +50,7 @@ function App() {
               <Box sx={{ml:5}}><Typography><Link to="/ner">NER</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/gpt2">GPT2</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/bart">BART</Link></Typography></Box>
+              <Box sx={{ml:5}}><Typography><Link to="/dalli">DALLI</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/batch">OFFLINE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/fine">FINE TUNING</Link></Typography></Box>
 
@@ -63,6 +65,7 @@ function App() {
           <Route path="/ner" element={<Ner/>}/> 
           <Route path="/gpt2" element={<GPT2/>}/> 
           <Route path="/bart" element={<Bart/>}/> 
+          <Route path="/dalli" element={<Dalli/>}/> 
           <Route path="/batch" element={<Batch/>}/> 
           <Route path="/fine" element={<FineTop/>}/> 
 
