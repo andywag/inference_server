@@ -44,9 +44,7 @@ class BasicFastApi:
         # Handle the output of the model which is attached to the message queue
         result = data_queue.get()
         result_dict = json.loads(result)
-        print("Rx Result")
         result = self.handle_rabbit_output(result_dict, state, tic)
-        print("Result", result)
         return result
 
 
