@@ -11,6 +11,10 @@ from api_classes import *
 from rabbit_run_queue import RabbitRunQueue
 from release_proto import models_map
 import yaml
+import requests
+import io, base64, cv2
+import numpy as np
+
 
 app = FastAPI()
 @app.get("/")
@@ -48,6 +52,19 @@ def run_bart(model_input:Bart) -> BartResponse:
 @app.post("/dalli_rabbit")
 def run_bart(model_input:Dalli) -> DalliResponse:
     return api_dict['dalli'].run_rabbit(model_input)
+
+@app.post("/ru_dalle")
+def run_rudalle(model_input:Dalli) -> DalliResponse:
+    r = requests.post('http://120.92.14.211:12501/v1/ruDALLE/generate',{'text':model_input.text})
+    result = r.json()
+    b64_string = result['b64img']
+    bytess = base64.b64decode(b64_string)
+    jpg_as_np = np.frombuffer(bytess, dtype=np.uint8)
+    print(jpg_as_np.shape)
+    img = cv2.imdecode(jpg_as_np, flags=1)
+    return DalliResponse(img.tolist(), 0.0)
+
+
 
 app.add_middleware(
     CORSMiddleware,

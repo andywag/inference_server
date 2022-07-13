@@ -1,6 +1,9 @@
 # set base image (host OS)
 FROM python:3.9
 
+#RUN apt install libgl1-mesa-glx -y
+RUN apt-get update 
+RUN apt-get install ffmpeg libsm6 libxext6 -y
 # set the working directory in the container
 WORKDIR /online
 
