@@ -1,5 +1,5 @@
 import sys
-sys.path.append("./min-dalle_int")
+sys.path.append("../models/min-dalle_int")
 
 import numpy as np
 import attr

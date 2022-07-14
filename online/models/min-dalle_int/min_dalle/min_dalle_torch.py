@@ -28,7 +28,7 @@ class MinDalleTorch(MinDalleBase):
     
         self.encoder_params_path = os.path.join(self.model_path, 'encoder.pt')
         self.decoder_params_path = os.path.join(self.model_path, 'decoder.pt')
-        self.detoker_params_path = os.path.join('min-dalle_int','pretrained', 'vqgan', 'detoker.pt')
+        self.detoker_params_path = os.path.join('..','models','min-dalle_int','pretrained', 'vqgan', 'detoker.pt')
 
         self.enable_ipu_encoder = False
         self.enable_ipu_decoder = True

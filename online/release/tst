@@ -1,39 +1,39 @@
 [bert_inference.py:311] Initialising from Torch checkpoint: ner_large_model.bin
 [device.py:135] Acquired device: Device Type:ipu Connection Type:always Id:0 Version:1.0.52 NumIPUs:1 NumTilesPerIPU:1472 DeviceIds: {0}
-[bert_inference.py:207] Compiled. Duration 4.016111612319946 seconds
-[connection_workflow.py:179] Pika version 1.2.0 connecting to ('192.168.3.114', 5672)
-[io_services_utils.py:345] Socket connected: <socket.socket fd=24, family=AddressFamily.AF_INET, type=2049, proto=6, laddr=('192.168.3.114', 45370), raddr=('192.168.3.114', 5672)>
-[connection_workflow.py:428] Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>).
-[connection_workflow.py:293] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[connection_workflow.py:725] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[blocking_connection.py:454] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5a17f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[blocking_connection.py:1246] Created channel=1
-[connection_workflow.py:179] Pika version 1.2.0 connecting to ('192.168.3.114', 5672)
-[io_services_utils.py:345] Socket connected: <socket.socket fd=28, family=AddressFamily.AF_INET, type=2049, proto=6, laddr=('192.168.3.114', 45374), raddr=('192.168.3.114', 5672)>
-[connection_workflow.py:428] Streaming transport linked up: (<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0>, _StreamingProtocolShim: <SelectConnection PROTOCOL transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>).
-[connection_workflow.py:293] AMQPConnector - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[connection_workflow.py:725] AMQPConnectionWorkflow - reporting success: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[blocking_connection.py:454] Connection workflow succeeded: <SelectConnection OPEN transport=<pika.adapters.utils.io_services_utils._AsyncPlaintextTransport object at 0x7f5b3c5b30f0> params=<ConnectionParameters host=192.168.3.114 port=5672 virtual_host=/ ssl=False>>
-[blocking_connection.py:1246] Created channel=1
-Loading Checkpoint /localdata/andyw/projects/inference_build/pytorch_checkpoints/ner_large_model.bin
-Bert Model NER
-Transfer Running
-Process Process-1:
+initializing MinDalleTorch
+reading files from ../models/min-dalle_int/pretrained/dalle_bart_mini
+initializing DalleBartEncoderTorch
+initializing DalleBartDecoderTorch
+initializing VQGanDetokenizer
+Process Process-4:
 Traceback (most recent call last):
   File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
     self.run()
   File "/usr/lib/python3.6/multiprocessing/process.py", line 93, in run
     self._target(*self._args, **self._kwargs)
-  File "../model_proto/model_proto.py", line 61, in run_ipu
-    time.sleep(10)
-KeyboardInterrupt
-initializing MinDalleTorch
-reading files from min-dalle_int/pretrained/dalle_bart_mini
-initializing DalleBartEncoderTorch
-initializing DalleBartDecoderTorch
-initializing VQGanDetokenizer
-Min Dalle Running
-Process Process-2:
+  File "../model_proto/model_proto.py", line 55, in run_ipu
+    self.model = self.create_model()
+  File "/localdata/andyw/projects/inference/online/release/dalli_proto.py", line 62, in create_model
+    model = MinDalleInterfaceWrapper()
+  File "../models/min-dalle_int/min_dalli_interface.py", line 28, in __init__
+    self.create_ipu()
+  File "../models/min-dalle_int/min_dalli_interface.py", line 33, in create_ipu
+    self.model = MinDalleTorch(False)
+  File "../models/min-dalle_int/min_dalle/min_dalle_torch.py", line 40, in __init__
+    self.init_detokenizer()
+  File "../models/min-dalle_int/min_dalle/min_dalle_torch.py", line 96, in init_detokenizer
+    params = torch.load(self.detoker_params_path)
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/torch/serialization.py", line 594, in load
+    with _open_file_like(f, 'rb') as opened_file:
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/torch/serialization.py", line 230, in _open_file_like
+    return _open_file(name_or_buffer, mode)
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/torch/serialization.py", line 211, in __init__
+    super(_open_file, self).__init__(open(name, mode))
+FileNotFoundError: [Errno 2] No such file or directory: 'min-dalle_int/pretrained/vqgan/detoker.pt'
+Loading ainize/bart-base-cnn
+Graph compilation:   0%|          | 0/100 [00:00<?]Graph compilation:   3%|▎         | 3/100 [00:03<01:38]Graph compilation:   4%|▍         | 4/100 [00:03<01:15]Graph compilation:   7%|▋         | 7/100 [00:05<01:02]Graph compilation:  17%|█▋        | 17/100 [00:05<00:15]Graph compilation:  21%|██        | 21/100 [00:06<00:15]Graph compilation:  24%|██▍       | 24/100 [00:06<00:14]Graph compilation:  26%|██▌       | 26/100 [00:06<00:13]Graph compilation:  28%|██▊       | 28/100 [00:12<00:51]Graph compilation:  30%|███       | 30/100 [00:17<01:22]Graph compilation:  31%|███       | 31/100 [00:17<01:11]Graph compilation:  33%|███▎      | 33/100 [00:18<00:58]Creating GPT2 Wrapper
+Finished Creating IPU
+Process Process-3:
 Traceback (most recent call last):
   File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
     self.run()
@@ -49,4 +49,100 @@ Traceback (most recent call last):
     project_proto.run_ipus(config)
   File "../model_proto/project_proto.py", line 36, in run_ipus
     time.sleep(10)
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Warning: couldn't remove temporary file '/localdata/tmp/poplar-kw1ly8g4.o', because: No such file or directory
+Warning: couldn't remove temporary file '/localdata/tmp/poplar-dwk499dt.o', because: No such file or directory
+Warning: couldn't remove temporary file '/localdata/tmp/poplar-exe-c76134.a', because: No such file or directory
+Process Process-2:
+Traceback (most recent call last):
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_poplar_executor.py", line 562, in _compile
+    *trace_args)
+poptorch.poptorch_core.Error: In poptorch/python/poptorch.cpp:1338: 'std::exception': KeyboardInterrupt: 
+
+At:
+  /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_options_impl.py(18): __call__
+  /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_poplar_executor.py(562): _compile
+  /localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_poplar_executor.py(790): __call__
+  ../models/bart/bart_interface.py(66): _build_model
+  ../models/bart/bart_interface.py(77): create_ipu
+  ../models/bart/bart_interface.py(49): __init__
+  /localdata/andyw/projects/inference/online/release/bart_proto.py(98): create_model
+  ../model_proto/model_proto.py(55): run_ipu
+  /usr/lib/python3.6/multiprocessing/process.py(93): run
+  /usr/lib/python3.6/multiprocessing/process.py(258): _bootstrap
+  /usr/lib/python3.6/multiprocessing/popen_fork.py(73): _launch
+  /usr/lib/python3.6/multiprocessing/popen_fork.py(19): __init__
+  /usr/lib/python3.6/multiprocessing/context.py(277): _Popen
+  /usr/lib/python3.6/multiprocessing/context.py(223): _Popen
+  /usr/lib/python3.6/multiprocessing/process.py(105): start
+  ../model_proto/project_proto.py(32): <listcomp>
+  ../model_proto/project_proto.py(32): run_ipus
+  release_proto.py(45): run
+  release_proto.py(50): <module>
+
+Error raised in:
+  [0] popart::Session::prepareDevice: Poplar compilation
+  [1] Compiler::compileAndPrepareDevice
+  [2] LowerToPopart::compile
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 93, in run
+    self._target(*self._args, **self._kwargs)
+  File "../model_proto/model_proto.py", line 55, in run_ipu
+    self.model = self.create_model()
+  File "/localdata/andyw/projects/inference/online/release/bart_proto.py", line 98, in create_model
+    model = BartInterfaceWrapper()
+  File "../models/bart/bart_interface.py", line 49, in __init__
+    self.create_ipu(options)
+  File "../models/bart/bart_interface.py", line 77, in create_ipu
+    self._build_model()
+  File "../models/bart/bart_interface.py", line 66, in _build_model
+    encoder_result = self.encoder(input_ids, attention_mask)
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_poplar_executor.py", line 790, in __call__
+    self._compile(in_tensors)
+  File "/localdata/andyw/projects/venv/lib/python3.6/site-packages/poptorch/_poplar_executor.py", line 562, in _compile
+    *trace_args)
+KeyboardInterrupt
+Graph compilation:  33%|███▎      | 33/100 [00:19<00:40]
+Loading Checkpoint /localdata/andyw/projects/inference_build/pytorch_checkpoints/ner_large_model.bin
+Bert Model NER
+Process Process-1:
+Traceback (most recent call last):
+  File "../models/bert/bert_interface_wrapper.py", line 60, in __init__
+    self.runner,  self.internal_args = bi.create_model_external(config, {})
+  File "../models/bert/bert_inference.py", line 378, in create_model_external
+    return main(args)
+  File "../models/bert/bert_inference.py", line 364, in main
+    session, anchors = bert_inference_session(model, args, data_flow, device)
+  File "../models/bert/bert_inference.py", line 269, in bert_inference_session
+    compile_graph_checked(args, session)
+  File "../models/bert/bert_inference.py", line 204, in compile_graph_checked
+    session.prepareDevice()
+  File "/localdata/andyw/projects/sdks/poplar_sdk-ubuntu_18_04-2.5.0-EA.1+877-1e885c7a4a/popart-ubuntu_18_04-2.5.0+2775-2c94776f7c/python/popart/session.py", line 206, in prepareDevice
+    super(InferenceSession, self).prepareDevice(loadEngine, err)
+popart_core.poplar_exception: gc-binary load failed: Error loading Graphcore binary: ELF file could not be loaded
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 258, in _bootstrap
+    self.run()
+  File "/usr/lib/python3.6/multiprocessing/process.py", line 93, in run
+    self._target(*self._args, **self._kwargs)
+  File "../model_proto/model_proto.py", line 55, in run_ipu
+    self.model = self.create_model()
+  File "/localdata/andyw/projects/inference/online/release/ner_proto.py", line 95, in create_model
+    ner=True)
+  File "../models/bert/bert_interface_wrapper.py", line 60, in __init__
+    self.runner,  self.internal_args = bi.create_model_external(config, {})
 KeyboardInterrupt

@@ -2,8 +2,8 @@
 #from bert_interface_wrapper import BertInterfaceWrapper
 
 import sys
-sys.path.append("../model_proto")
-sys.path.append("../public_api")
+sys.path.append("../models/model_proto")
+sys.path.append("../models/public_api")
 
 import numpy as np
 import attr
@@ -88,7 +88,7 @@ class NerProto(ModelProto):
     def create_model(self):
         from bert_interface_wrapper import BertInterfaceWrapper
 
-        base_path = "./bert"
+        base_path = "../models/bert"
         config = f"{base_path}/configs/sut_inference_pack_384_ner_single.json"
         model = BertInterfaceWrapper( 
             config=config,
