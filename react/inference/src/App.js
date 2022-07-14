@@ -51,7 +51,7 @@ function App() {
               <Box sx={{ml:5}}><Typography><Link to="/ner">NER</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/gpt2">GPT2</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/bart">BART</Link></Typography></Box>
-              <Box sx={{ml:5}}><Typography><Link to="/dalli">DALLE</Link></Typography></Box>
+              <Box sx={{ml:5}}><Typography><Link to="/dalli">MIN-DALLE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/rudalle">RU-DALLE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/batch">OFFLINE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/fine">FINE TUNING</Link></Typography></Box>
