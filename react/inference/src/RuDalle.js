@@ -77,7 +77,7 @@ function RuDalle(props) {
 
     return (
   <Grid container spacing={2}>
-    <Grid item xs={12}><h1>Min Dalli</h1></Grid>
+    <Grid item xs={12}><h1>RU-DALLE</h1></Grid>
     <Grid item xs={12}>
     <TextField value={text} label="text" style = {{width: 800}} multiline="True" onChange={(e) => {setText(e.target.value);}} InputLabelProps={{ shrink: true }}/>
     </Grid>
