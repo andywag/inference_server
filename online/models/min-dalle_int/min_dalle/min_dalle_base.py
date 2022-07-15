@@ -8,7 +8,7 @@ class MinDalleBase:
     def __init__(self, is_mega: bool):
         self.is_mega = is_mega
         model_name = 'dalle_bart_{}'.format('mega' if is_mega else 'mini')
-        self.model_path = os.path.join('min-dalle_int/pretrained', model_name)
+        self.model_path = os.path.join('../models/min-dalle_int/pretrained', model_name)
 
         print("reading files from {}".format(self.model_path))
         config_path = os.path.join(self.model_path, 'config.json')

@@ -55,7 +55,7 @@ def run_bart(model_input:Dalli) -> DalliResponse:
 
 @app.post("/ru_dalle")
 def run_rudalle(model_input:Dalli) -> DalliResponse:
-    r = requests.post('http://120.92.14.211:12501/v1/ruDALLE/generate',{'text':model_input.text})
+    r = requests.post("http://120.92.42.245:12501/v1/ruDALLE/generate",json={'text':model_input.text})
     result = r.json()
     b64_string = result['b64img']
     bytess = base64.b64decode(b64_string)
