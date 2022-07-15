@@ -1,6 +1,10 @@
 
 import requests
-r = requests.post('http://120.92.42.245:12501/v1/ruDALLE/generate',{'text':'man in boat'})
+import time
+
+tic = time.time()
+r = requests.post("http://120.92.42.245:12501/v1/ruDALLE/generate",json={"text":"dark matter in the universe"})
+print("Found", time.time() - tic)
 print("CC", r)
 result = r.json()
 print("A", result.keys())
@@ -15,5 +19,7 @@ import numpy as np
 byte = base64.b64decode(b64_string)
 jpg_as_np = np.frombuffer(byte, dtype=np.uint8)
 img = cv2.imdecode(jpg_as_np, flags=1)
-print(img)
-print(result)
+print("Found", time.time() - tic)
+
+#print(img)
+#print(result)
