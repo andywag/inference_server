@@ -11,6 +11,7 @@ import Batch from './Batch.js'
 import FineTop from './FineTop';
 import Dalli from './Dalli';
 import RuDalle from './RuDalle'
+import RuDalleB64 from './RuDalleB64'
 
 import { BrowserRouter, Router, Route, Routes, Link } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
@@ -53,6 +54,7 @@ function App() {
               <Box sx={{ml:5}}><Typography><Link to="/bart">BART</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/dalli">MIN-DALLE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/rudalle">RU-DALLE</Link></Typography></Box>
+              <Box sx={{ml:5}}><Typography><Link to="/rudalleb64">RU-DALLE-B64</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/batch">OFFLINE</Link></Typography></Box>
               <Box sx={{ml:5}}><Typography><Link to="/fine">FINE TUNING</Link></Typography></Box>
 
@@ -69,6 +71,7 @@ function App() {
           <Route path="/bart" element={<Bart/>}/> 
           <Route path="/dalli" element={<Dalli/>}/> 
           <Route path="/rudalle" element={<RuDalle/>}/> 
+          <Route path="/rudalleb64" element={<RuDalleB64/>}/> 
           <Route path="/batch" element={<Batch/>}/> 
           <Route path="/fine" element={<FineTop/>}/> 
 
