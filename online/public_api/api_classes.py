@@ -80,4 +80,8 @@ class Dalli:
 class DalliResponse:
     results:List[List[List[int]]]
     server_time:float
-    
+
+@dataclass
+class DalliResponseB64:
+    results:str
+    server_time:float

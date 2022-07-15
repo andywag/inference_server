@@ -21,5 +21,8 @@ jpg_as_np = np.frombuffer(byte, dtype=np.uint8)
 img = cv2.imdecode(jpg_as_np, flags=1)
 print("Found", time.time() - tic)
 
+print("D", b64_string)
+#print("E", byte)
+
 #print(img)
 #print(result)

@@ -64,6 +64,13 @@ def run_rudalle(model_input:Dalli) -> DalliResponse:
     img = cv2.imdecode(jpg_as_np, flags=1)
     return DalliResponse(img.tolist(), 0.0)
 
+@app.post("/ru_dalle_b64")
+def run_rudalle(model_input:Dalli) -> DalliResponseB64:
+    r = requests.post("http://120.92.42.245:12501/v1/ruDALLE/generate",json={'text':model_input.text})
+    result = r.json()
+    b64_string = result['b64img']
+    return b64_string
+
 
 
 app.add_middleware(
