@@ -65,17 +65,17 @@ function RuDalleB64(props) {
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text, seed:0})
+      body: JSON.stringify({ text: text})
     };
     console.log(requestOptions)
     var time = new Date().getTime()
-    fetch(ONLINE_ADDRESS + "ru_dalle_b64",requestOptions)
+    fetch("http://120.92.42.245:12501/v1/ruDALLE/generate",requestOptions)
       .then(response => response.json())
       .then(r => {
           console.log(r)
           setResponseTime(new Date().getTime() - time)
           setServerTime(parseInt(1000*r.server_time))
-          setImageData("data:image/png;base64,"+r)
+          setImageData("data:image/png;base64,"+r['b64img'])
         })
     
     //.then(data => this.setState({ postId: data.id }));
