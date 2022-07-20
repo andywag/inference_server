@@ -23,11 +23,12 @@ def create_config(train):
     train = train
     config = AutoConfig.from_pretrained(checkpoint)
     config.embedding_serialization_factor=1
-    config.num_labels = 2
+    config.num_labels = 10
     config.layers_per_ipu = [24]    
     config.recompute_checkpoint_every_layer=False
 
     handle_custom_ops(config)
+    config.problem_type = 'multi_label_classification'
 
 
     return config

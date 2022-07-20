@@ -36,8 +36,9 @@ def create_config(train):
     if train:
         config.layers_per_ipu = [0,4,4,4]#self.inference_config.ipu.layers_per_ipu
         config.recompute_checkpoint_every_layer=True
-        inference_config.detail.batch_size=10
-    
+        inference_config.detail.batch_size=2
+        inference_config.detail.sequence_length=384
+
     config.recompute_checkpoint_every_layer=False
     config.problem_type = 'multi_label_classification'
 
@@ -61,7 +62,7 @@ print("B", len(tokenized_dataset))
 
 options = get_options(inference_config.ipu, True)
 
-data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=1, shuffle=True)
+data_loader = poptorch.DataLoader(options, tokenized_dataset, batch_size=inference_config.detail.batch_size, shuffle=True)
 
 model = PipelinedBertForSequenceClassification.from_pretrained('bert-base-uncased',config=config).half()
 optimizer = get_optimizer(inference_config.optimizer, model)
@@ -71,7 +72,7 @@ model_ipu = poptorch.trainingModel(model, options, optimizer)
 iter_loader = iter(data_loader)
 print("A", len(iter_loader))
 #data = next(iter_loader)
-for x in range(200):
+for x in range(10):
     try :
         pass
         data = next(iter_loader)
@@ -81,5 +82,6 @@ for x in range(200):
     tic = time.time()
 
     output = model_ipu(data['input_ids'], data['attention_mask'], data['label'])
-    print("B", output[0], inference_config.ipu.batches_per_step*inference_config.ipu.gradient_accumulation/(time.time()-tic))
+    print("B", output[0], inference_config.detail.batch_size*inference_config.ipu.batches_per_step*inference_config.ipu.gradient_accumulation/(time.time()-tic))
+    print("C", output[1].shape)
 model_ipu.save_pretrained("imdb_checkpoint")

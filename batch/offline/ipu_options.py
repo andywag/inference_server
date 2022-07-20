@@ -69,14 +69,14 @@ def get_options(options, train:bool=False):
     opts = poptorch.Options()
     constant_options(opts)
     
-    if train:
-        training_options(opts, options)
+    #if train:
+    training_options(opts, options)
 
     
     opts.deviceIterations(options.batches_per_step)
     # Precision options
-    if options.enable_half_partials:
-        opts.Precision.setPartialsType(torch.float16)
+    #if options.enable_half_partials:
+    opts.Precision.setPartialsType(torch.float16)
 
 
 

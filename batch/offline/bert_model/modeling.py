@@ -26,9 +26,11 @@ from .bert_fused_attention import BertFusedSelfAttention
 import os
 import ctypes
 
-from .bert_gc_mixin import BertMixIn, BertSentenceMixIn
-
+from .bert_gc_mixin import BertMixIn, BertSentenceMixIn, DisBertMixIn
 import forge as f
+
+
+
 
 def logger(msg):
     logging.info(msg)
@@ -291,6 +293,21 @@ class PipelinedBertForSequenceClassification(transformers.BertForSequenceClassif
             indices = torch.argmax(output.logits,dim=-1)
             return output.logits, indices
 
+class PipelinedDistilBertForSequenceClassification(transformers.DistilBertForSequenceClassification, DisBertMixIn):
+    def __init__(self, config):
+        super().__init__(config)
+        layer_ipu = _get_layer_ipu(self.config.layers_per_ipu)
+        self.setup_layers(self.config, layer_ipu)
+
+    @f.sign(f.self,f.arg('input_ids'),f.arg('attention_mask'),f.arg('labels', default=None))
+    def forward(self, **kwargs):
+        output = super().forward(**kwargs)
+       
+        if self.training:
+            return output.loss, output.logits
+        else:
+            indices = torch.argmax(output.logits,dim=-1)
+            return output.logits, indices
     
 
 class PipelinedBertForTokenClassification(transformers.BertForTokenClassification, BertMixIn):
