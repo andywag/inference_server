@@ -1,7 +1,7 @@
 from model_proto import *
 import sys
-sys.path.append("./bert")
-sys.path.append("./bert/run")
+sys.path.append("../models/bert")
+sys.path.append("../models/bert/run")
 
 import dataclasses
 

@@ -54,11 +54,7 @@ class BartInterfaceWrapper:
     def _create_decoder(self, checkpoint):
         return bart_decoder.create(checkpoint)
 
-<<<<<<< Updated upstream
-    def _build_model(self, sequence_length:int=384, batch_size:int=4, output_length:int = 32):
-=======
     def _build_model(self, sequence_length:int=384, batch_size:int=1, output_length:int = 32):
->>>>>>> Stashed changes
         # Encoder Inputs
         input_ids = torch.zeros((batch_size, sequence_length)).to(torch.int64)
         attention_mask = torch.zeros((batch_size, sequence_length)).to(torch.int64)

@@ -45,7 +45,6 @@ class BasicFastApi:
         result = data_queue.get()
         result_dict = json.loads(result)
         result = self.handle_rabbit_output(result_dict, state, tic)
-        print("Result", result)
         return result
 
 

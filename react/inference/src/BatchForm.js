@@ -23,6 +23,19 @@ const examples = [
     results:""
   },
   {
+    name:"imdb",
+    model_type:"DISTILBERT",
+    model_size:"Base",
+    checkpoint:"textattack/distilbert-base-uncased-imdb",
+    dataset:"imdb,train,text",
+    tokenizer:"bert-base-uncased",
+    classifier:"Sequence",
+    num_labels:2, 
+    cloud:"None",
+    endpoint:"",
+    results:""
+  },
+  {
     name:"indonlu",
     model_type:"BERT",
     model_size:"Base",
@@ -44,19 +57,6 @@ const examples = [
     tokenizer:"bert-base-cased",
     classifier:"Token",
     num_labels:9,
-    cloud:"None",
-    endpoint:"",
-    results:""
-  },
-  {
-    name:"mlm",
-    model_type:"BERT",
-    model_size:"Base",
-    checkpoint:"bert-base-uncased",
-    dataset:"wikitext:wikitext-103-v1,test,text",
-    tokenizer:"bert-base-uncased",
-    classifier:"MLM",
-    num_labels:32,
     cloud:"None",
     endpoint:"",
     results:""
@@ -89,7 +89,7 @@ const examples = [
   }
 ]
 
-const exampleNames = ['Imdb','Indonlu','NER','MLM','MLM(Cloud)','IMDB(Cloud)']
+const exampleNames = ['Imdb','Imdb(Distil)','Indonlu','NER','MLM(Cloud)','IMDB(Cloud)']
 
 function FineForm(props) {
   
@@ -172,7 +172,7 @@ function FineForm(props) {
     </Grid>
     <Grid container padding={1}>
         <SimpleText label="RunId" value={runId} set={setRunId} grid={3}/>
-        <SimpleSelect label="Model" value={model} set={setModel} options={["BERT","GPT2"]} grid={3}/>
+        <SimpleSelect label="Model" value={model} set={setModel} options={["BERT","DISTILBERT","GPT2"]} grid={3}/>
         <SimpleSelect label="Size" value={modelSize} set={setModelSize} options={["Base","Medium","Large"]} grid={3}/>
     </Grid>
     <Grid container padding={1}>

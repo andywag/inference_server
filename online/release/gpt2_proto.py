@@ -1,7 +1,7 @@
 
 from bert_proto import *
 import sys
-sys.path.append("./gpt2_model")
+sys.path.append("../models/gpt2_model")
 
 import numpy as np
 import attr

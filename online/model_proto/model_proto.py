@@ -33,7 +33,7 @@ class ModelProto:
     output_type:TypeVar=None
 
     def body_to_input(self, body:dict):
-        print("Base", self.input_type)
+        #print("Base", self.input_type)
         user = from_dict(data_class=self.input_type, data=body)
         return user
 

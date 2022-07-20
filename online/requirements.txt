@@ -5,3 +5,6 @@ dacite
 setuptools-rust
 transformers
 attrs
+requests
+opencv-python
+numpy

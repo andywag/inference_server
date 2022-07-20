@@ -28,6 +28,19 @@ function FineForm(props) {
       epochs:5
     },
     {
+      name:"imdb",
+      model_type:"DISTILBERT",
+      model_size:"Base",
+      checkpoint:"distilbert-base-uncased",
+      dataset:"imdb,train,text",
+      tokenizer:"bert-base-uncased",
+      classifier:"Sequence",
+      num_labels:2, 
+      cloud:"None",
+      endpoint:"",
+      results:""
+    },
+    {
       name:"ner",
       model_type:"BERT",
       model_size:"Base",
@@ -76,7 +89,7 @@ function FineForm(props) {
   
   //emilyalsentzer/Bio_ClinicalBERT
 
-  const exampleNames = ["Imdb", "Ner", "Imdb(Cloud)","BIO(Cloud)"]
+  const exampleNames = ["Imdb", "Imdb(Distil)", "Ner", "Imdb(Cloud)","BIO(Cloud)"]
   const updateExample = (x) => {
     console.log(examples[x].model_type)
     setRunId(examples[x].name);
@@ -160,7 +173,7 @@ function FineForm(props) {
     </Grid>
     <Grid container padding={1}>
         <SimpleText label="RunId" value={runId} set={setRunId} grid={3}/>
-        <SimpleSelect label="Model" value={model} set={setModel} options={["BERT","GPT2"]} grid={3}/>
+        <SimpleSelect label="Model" value={model} set={setModel} options={["BERT","DISTILBERT","GPT2"]} grid={3}/>
         <SimpleSelect label="Size" value={modelSize} set={setModelSize} options={["Base","Medium","Large"]} grid={3}/>
     </Grid>
     <Grid container padding={1}>

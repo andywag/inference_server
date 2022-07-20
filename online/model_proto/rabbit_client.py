@@ -29,7 +29,7 @@ class RabbitProtoWrapper:
         output_dict = asdict(output)
         output_json = json.dumps(output_dict)
 
-        print("Finish Callback", reply_to, correlation_id)
+        #print("Finish Callback", reply_to, correlation_id)
         self.tx_channel.basic_publish(exchange='',
             routing_key=reply_to,
             properties=pika.BasicProperties(

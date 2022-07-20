@@ -79,7 +79,7 @@ class SquadProto(ModelProto):
         from bert_interface_wrapper import BertInterfaceWrapper
 
         print("Creating Model")
-        base_path = "./bert"
+        base_path = "../models/bert"
         config = f"{base_path}/configs/sut_inference_pack_384_torch_single.json"
         model = BertInterfaceWrapper( 
             config=config,

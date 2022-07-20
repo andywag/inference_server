@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append('bart')
+sys.path.append('../models/bart')
 
 import numpy as np
 import attr
@@ -94,7 +94,7 @@ class BartProto(ModelProto):
     def create_model(self):
         from bart_interface import BartInterfaceWrapper
 
-        base_path = "./bart"
+        base_path = "../models/bart"
         model = BartInterfaceWrapper()
         return model
 
